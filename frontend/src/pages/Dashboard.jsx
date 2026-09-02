@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Menu } from "lucide-react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { Menu, Zap } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import KPICard from "../components/KPICard";
 import NetworkMap from "../components/NetworkMap";
@@ -17,6 +17,14 @@ import {
   ANOMALY_DETAIL,
   ANOMALY_STATION_ID,
 } from "../data/mockData";
+import {
+  getStations,
+  getStationSeries,
+  getNetworkStats,
+  getAnomalies,
+  getAnomalyDetail,
+  triggerSimulateAnomaly,
+} from "../services/api";
 
 function formatClock(d) {
   return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -26,6 +34,7 @@ export default function Dashboard() {
   const [navActive, setNavActive] = useState("overview");
   const [mobileSidebar, setMobileSidebar] = useState(false);
   const [selectedStationId, setSelectedStationId] = useState(ANOMALY_STATION_ID);
+  const [stationSeries, setStationSeries] = useState(SENSOR_SERIES);
   const [anomalyList, setAnomalyList] = useState(ANOMALIES);
   const [selectedAnomaly, setSelectedAnomaly] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -33,16 +42,63 @@ export default function Dashboard() {
   const [clock, setClock] = useState(new Date("2026-08-30T10:42:18"));
   const [observations, setObservations] = useState(NETWORK_STATS.observations);
   const [activeAnomalies, setActiveAnomalies] = useState(NETWORK_STATS.activeAnomalies);
+  const [networkHealth, setNetworkHealth] = useState(NETWORK_STATS.networkHealth);
+  const [stationsOnline, setStationsOnline] = useState(NETWORK_STATS.stationsOnline);
+  const [sparklines, setSparklines] = useState(KPI_SPARKLINES);
   const [loading, setLoading] = useState(true);
   const [stations, setStations] = useState(STATIONS);
+  const [isSimulating, setIsSimulating] = useState(false);
   const toastIdRef = useRef(0);
 
   const selectedStation = stations.find((s) => s.id === selectedStationId) || null;
 
+  // Initial Data Fetch from FastAPI Backend (with fallback)
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 900);
-    return () => clearTimeout(t);
+    let mounted = true;
+    async function loadInitialData() {
+      try {
+        const [stns, stats, anoms] = await Promise.all([
+          getStations(),
+          getNetworkStats(),
+          getAnomalies(),
+        ]);
+        if (mounted) {
+          if (stns && stns.length > 0) setStations(stns);
+          if (stats) {
+            if (stats.observations) setObservations(stats.observations);
+            if (stats.activeAnomalies !== undefined) setActiveAnomalies(stats.activeAnomalies);
+            if (stats.networkHealth !== undefined) setNetworkHealth(stats.networkHealth);
+            if (stats.stationsOnline !== undefined) setStationsOnline(stats.stationsOnline);
+            if (stats.sparklines) setSparklines(stats.sparklines);
+          }
+          if (anoms && anoms.length > 0) setAnomalyList(anoms);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.debug("Backend initial fetch error, maintaining fallback:", err);
+        if (mounted) setLoading(false);
+      }
+    }
+    loadInitialData();
+    return () => { mounted = false; };
   }, []);
+
+  // Fetch 60-Minute Sliding Series when selected station changes
+  useEffect(() => {
+    let mounted = true;
+    async function loadSeries() {
+      try {
+        const series = await getStationSeries(selectedStationId);
+        if (mounted && series && series.length > 0) {
+          setStationSeries(series);
+        }
+      } catch (err) {
+        console.debug("Station series fetch error:", err);
+      }
+    }
+    loadSeries();
+    return () => { mounted = false; };
+  }, [selectedStationId]);
 
   // Clock + observation counter tick
   useEffect(() => {
@@ -67,58 +123,84 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Occasional simulated anomaly event
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const pool = [
-        { station: "AWS-DEL-01", stationName: "Delhi", parameter: "Temperature", observed: "54.1°C", expected: "24.9°C", rootCause: "Sensor Spike" },
-        { station: "AWS-MUM-04", stationName: "Mumbai", parameter: "Humidity", observed: "98.7%", expected: "73.1%", rootCause: "Possible Sensor Drift" },
-        { station: "AWS-GHY-08", stationName: "Guwahati", parameter: "Pressure", observed: "—", expected: "1004.6 hPa", rootCause: "Communication Failure" },
-      ];
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      const confidence = Number((85 + Math.random() * 13).toFixed(1));
-      const now = formatClock(new Date());
-
-      const entry = {
-        id: `AN-${Math.floor(Math.random() * 90000) + 10000}`,
-        time: now,
-        severity: confidence > 90 ? "critical" : "warning",
-        confidence,
-        ...pick,
-      };
-
-      setAnomalyList((prev) => [entry, ...prev].slice(0, 12));
-      setActiveAnomalies((n) => n + 1);
-      setStations((prev) =>
-        prev.map((s) => (s.id === entry.station ? { ...s, status: "anomaly", health: Math.max(30, s.health - 6) } : s))
-      );
-
-      const id = ++toastIdRef.current;
-      setToasts((prev) => [...prev, { id, station: entry.station, parameter: entry.parameter, confidence: entry.confidence }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
-    }, 22000);
-    return () => clearInterval(interval);
-  }, []);
-
   const dismissToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  const openAnomalyDetail = (anomaly) => {
-    setSelectedAnomaly({ ...ANOMALY_DETAIL, station: anomaly.station, severity: anomaly.severity, confidence: anomaly.confidence });
+  // Open Full LangGraph Diagnostic Drawer
+  const openAnomalyDetail = async (anomaly) => {
+    if (!anomaly) return;
+    try {
+      const detail = await getAnomalyDetail(anomaly.id);
+      setSelectedAnomaly({
+        ...detail,
+        station: anomaly.station || detail.station,
+        severity: anomaly.severity || detail.severity,
+        confidence: anomaly.confidence || detail.confidence,
+      });
+    } catch {
+      setSelectedAnomaly({
+        ...ANOMALY_DETAIL,
+        station: anomaly.station,
+        severity: anomaly.severity,
+        confidence: anomaly.confidence,
+      });
+    }
     setPanelOpen(true);
+  };
+
+  // Interactive Anomaly Simulation
+  const handleSimulateAnomaly = async () => {
+    setIsSimulating(true);
+    try {
+      const res = await triggerSimulateAnomaly(selectedStationId || "AWS-DEL-01", "spike");
+      if (res?.detail) {
+        const detail = res.detail;
+        const newEntry = {
+          id: detail.id || `AN-${Math.floor(Math.random() * 90000) + 10000}`,
+          time: formatClock(new Date()),
+          station: detail.station,
+          stationName: detail.stationName || "Delhi",
+          parameter: detail.parameter || "Temperature",
+          observed: `${detail.observed}°C`,
+          expected: `${detail.expected}°C`,
+          severity: detail.severity || "critical",
+          confidence: detail.confidence || 98.5,
+          rootCause: detail.probableRootCause || "Sensor Spike",
+        };
+        setAnomalyList((prev) => [newEntry, ...prev].slice(0, 15));
+        setActiveAnomalies((n) => n + 1);
+        setStations((prev) =>
+          prev.map((s) => (s.id === detail.station ? { ...s, status: "anomaly", health: Math.max(25, s.health - 8) } : s))
+        );
+
+        // Refresh series to display newly injected spike
+        const updatedSeries = await getStationSeries(selectedStationId);
+        if (updatedSeries && updatedSeries.length > 0) {
+          setStationSeries(updatedSeries);
+        }
+
+        const id = ++toastIdRef.current;
+        setToasts((prev) => [...prev, { id, station: detail.station, parameter: detail.parameter, confidence: detail.confidence }]);
+        setTimeout(() => {
+          setToasts((prev) => prev.filter((t) => t.id !== id));
+        }, 5000);
+      }
+    } catch (err) {
+      console.error("Simulation error:", err);
+    } finally {
+      setIsSimulating(false);
+    }
   };
 
   const kpis = useMemo(
     () => [
       {
         label: "Stations Online",
-        value: `${NETWORK_STATS.stationsOnline}`,
+        value: `${stationsOnline}`,
         suffix: `/ ${NETWORK_STATS.stationsTotal}`,
         trend: "+2 this week",
         trendDirection: "up",
         status: "good",
-        sparkline: KPI_SPARKLINES.stationsOnline,
+        sparkline: sparklines.stationsOnline,
       },
       {
         label: "Observations",
@@ -126,7 +208,7 @@ export default function Dashboard() {
         trend: "live",
         trendDirection: "up",
         status: "info",
-        sparkline: KPI_SPARKLINES.observations,
+        sparkline: sparklines.observations,
       },
       {
         label: "Active Anomalies",
@@ -134,29 +216,30 @@ export default function Dashboard() {
         trend: "+3 vs yesterday",
         trendDirection: "down",
         status: "warn",
-        sparkline: KPI_SPARKLINES.activeAnomalies,
+        sparkline: sparklines.activeAnomalies,
       },
       {
         label: "Network Health",
-        value: `${NETWORK_STATS.networkHealth}%`,
+        value: `${networkHealth}%`,
         trend: "-0.4% vs 1h",
         trendDirection: "down",
         status: "good",
-        sparkline: KPI_SPARKLINES.networkHealth,
+        sparkline: sparklines.networkHealth,
       },
     ],
-    [observations, activeAnomalies]
+    [observations, activeAnomalies, stationsOnline, networkHealth, sparklines]
   );
 
-  const tempCurrent = SENSOR_SERIES[SENSOR_SERIES.length - 1].temp;
-  const tempMin = Math.min(...SENSOR_SERIES.map((d) => d.temp));
-  const tempMax = Math.max(...SENSOR_SERIES.map((d) => d.temp));
-  const pressureCurrent = SENSOR_SERIES[SENSOR_SERIES.length - 1].pressure;
-  const pressureMin = Math.min(...SENSOR_SERIES.map((d) => d.pressure));
-  const pressureMax = Math.max(...SENSOR_SERIES.map((d) => d.pressure));
-  const humidityCurrent = SENSOR_SERIES[SENSOR_SERIES.length - 1].humidity;
-  const humidityMin = Math.min(...SENSOR_SERIES.map((d) => d.humidity));
-  const humidityMax = Math.max(...SENSOR_SERIES.map((d) => d.humidity));
+  const seriesToUse = stationSeries && stationSeries.length > 0 ? stationSeries : SENSOR_SERIES;
+  const tempCurrent = seriesToUse[seriesToUse.length - 1]?.temp ?? 24.6;
+  const tempMin = Math.min(...seriesToUse.map((d) => d.temp));
+  const tempMax = Math.max(...seriesToUse.map((d) => d.temp));
+  const pressureCurrent = seriesToUse[seriesToUse.length - 1]?.pressure ?? 1012.4;
+  const pressureMin = Math.min(...seriesToUse.map((d) => d.pressure));
+  const pressureMax = Math.max(...seriesToUse.map((d) => d.pressure));
+  const humidityCurrent = seriesToUse[seriesToUse.length - 1]?.humidity ?? 68.0;
+  const humidityMin = Math.min(...seriesToUse.map((d) => d.humidity));
+  const humidityMax = Math.max(...seriesToUse.map((d) => d.humidity));
 
   return (
     <div className="flex min-h-screen bg-base-950">
@@ -185,6 +268,17 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4 text-[12px] text-ink-dim">
+            {/* Live Interactive Trigger Button */}
+            <button
+              onClick={handleSimulateAnomaly}
+              disabled={isSimulating}
+              className="flex items-center gap-1.5 rounded-full border border-signal-warn/30 bg-signal-warn/10 px-3 py-1 text-signal-warn transition-all hover:bg-signal-warn/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-signal-warn disabled:opacity-50"
+              title="Inject test anomaly via ML & LangGraph engine"
+            >
+              <Zap size={13} className={isSimulating ? "animate-spin text-signal-bad" : ""} />
+              {isSimulating ? "Analyzing ML..." : "Inject Test Anomaly"}
+            </button>
+
             <div className="flex items-center gap-1.5 rounded-full border border-signal-good/25 bg-signal-good/10 px-2.5 py-1 text-signal-good">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal-good opacity-60" />
@@ -232,7 +326,7 @@ export default function Dashboard() {
             <div className="grid gap-4 lg:grid-cols-3">
               <SensorChart
                 title="Temperature"
-                data={SENSOR_SERIES}
+                data={seriesToUse}
                 dataKey="temp"
                 unit="°C"
                 color="#4bbcdc"
@@ -242,7 +336,7 @@ export default function Dashboard() {
               />
               <SensorChart
                 title="Atmospheric Pressure"
-                data={SENSOR_SERIES}
+                data={seriesToUse}
                 dataKey="pressure"
                 unit=" hPa"
                 color="#7ad4ec"
@@ -252,7 +346,7 @@ export default function Dashboard() {
               />
               <SensorChart
                 title="Relative Humidity"
-                data={SENSOR_SERIES}
+                data={seriesToUse}
                 dataKey="humidity"
                 unit="%"
                 color="#5fd3f0"
