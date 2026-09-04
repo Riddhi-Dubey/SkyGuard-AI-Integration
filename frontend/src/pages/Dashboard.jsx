@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Menu, Zap } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import KPICard from "../components/KPICard";
@@ -7,6 +7,9 @@ import StationInspector from "../components/StationInspector";
 import SensorChart from "../components/SensorChart";
 import AnomalyTable from "../components/AnomalyTable";
 import AnomalyDetail from "../components/AnomalyDetail";
+import AIInsight from "../components/AIInsight";
+import ShapChart from "../components/ShapChart";
+import MaintenanceRisk from "../components/MaintenanceRisk";
 import Toast from "../components/Toast";
 import {
   STATIONS,
@@ -16,6 +19,7 @@ import {
   ANOMALIES,
   ANOMALY_DETAIL,
   ANOMALY_STATION_ID,
+  SHAP_CONTRIBUTIONS,
 } from "../data/mockData";
 import {
   getStations,
@@ -32,7 +36,36 @@ function formatClock(d) {
 
 export default function Dashboard() {
   const [navActive, setNavActive] = useState("overview");
+  const [focusedSection, setFocusedSection] = useState(null);
   const [mobileSidebar, setMobileSidebar] = useState(false);
+
+  const handleNavSelect = (id) => {
+    setNavActive(id);
+    if (focusedSection === id) {
+      setFocusedSection(null);
+    } else {
+      setFocusedSection(id);
+      const el = document.getElementById(`section-${id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
+
+  const handleClearFocus = () => {
+    setFocusedSection(null);
+  };
+
+  const getSectionClass = (sectionId) => {
+    const base = "scroll-mt-24 transition-all duration-500 ease-in-out relative rounded-2xl";
+    if (!focusedSection) {
+      return `${base} opacity-100 filter-none`;
+    }
+    if (focusedSection === sectionId) {
+      return `${base} opacity-100 filter-none ring-2 ring-atmos-400 shadow-[0_0_35px_rgba(75,188,220,0.22)] bg-base-900/40 p-4 sm:p-5 -m-2 sm:-m-3 z-10`;
+    }
+    return `${base} filter blur-[4px] opacity-25 scale-[0.985] cursor-pointer hover:opacity-45 select-none transition-all duration-500`;
+  };
   const [selectedStationId, setSelectedStationId] = useState(ANOMALY_STATION_ID);
   const [stationSeries, setStationSeries] = useState(SENSOR_SERIES);
   const [anomalyList, setAnomalyList] = useState(ANOMALIES);
@@ -245,7 +278,7 @@ export default function Dashboard() {
     <div className="flex min-h-screen bg-base-950">
       <Sidebar
         active={navActive}
-        onSelect={setNavActive}
+        onSelect={handleNavSelect}
         mobileOpen={mobileSidebar}
         onCloseMobile={() => setMobileSidebar(false)}
       />
@@ -291,38 +324,135 @@ export default function Dashboard() {
         </header>
 
         <main className="flex-1 space-y-6 px-6 py-6">
-          {/* KPI cards */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-[104px] rounded-lg border border-line bg-base-900/60 p-5">
-                    <div className="skeleton h-3 w-24 rounded" />
-                    <div className="skeleton mt-4 h-6 w-16 rounded" />
-                  </div>
-                ))
-              : kpis.map((k) => <KPICard key={k.label} {...k} />)}
-          </div>
-
-          {/* Map + Inspector */}
-          <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-[14px] font-semibold text-white">AWS Network</h2>
-                <span className="text-[12px] text-ink-faint">{stations.length} stations shown</span>
-              </div>
-              <NetworkMap stations={stations} selectedId={selectedStationId} onSelect={setSelectedStationId} />
+          {/* Active Focus Pill when an option is chosen */}
+          {focusedSection && (
+            <div className="sticky top-20 z-20 mx-auto -mt-2 mb-2 flex w-fit items-center gap-3 rounded-full border border-atmos-400/40 bg-base-900/95 px-4 py-1.5 shadow-2xl backdrop-blur-md animate-toast-in text-[12px] text-ink">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-atmos-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-atmos-400" />
+              </span>
+              <span>
+                Focusing on:{" "}
+                <strong className="text-white capitalize">
+                  {focusedSection === "overview"
+                    ? "Overview (KPIs)"
+                    : focusedSection === "stations"
+                    ? "AWS Stations & Network"
+                    : focusedSection === "monitoring"
+                    ? "Live Sensor Monitoring"
+                    : focusedSection === "anomalies"
+                    ? "Recent Anomalies"
+                    : "AI Analytics & Diagnostics"}
+                </strong>
+              </span>
+              <button
+                onClick={handleClearFocus}
+                className="ml-2 rounded-full bg-atmos-400/15 border border-atmos-400/30 px-2.5 py-0.5 text-[11px] font-medium text-atmos-300 hover:bg-atmos-400/25 hover:text-white transition-all"
+              >
+                Show All Sections ✕
+              </button>
             </div>
-            <div>
-              <h2 className="mb-3 text-[14px] font-semibold text-white">Station Inspector</h2>
-              <div className="h-[460px] lg:h-[520px]">
-                <StationInspector station={selectedStation} onViewDetails={() => openAnomalyDetail(anomalyList[0])} />
+          )}
+
+          {/* Section 1: Overview */}
+          <section
+            id="section-overview"
+            className={getSectionClass("overview")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "overview") handleNavSelect("overview");
+            }}
+          >
+            {focusedSection === "overview" && (
+              <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
+                  Overview & Network KPI Metrics
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              </div>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {loading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-[104px] rounded-lg border border-line bg-base-900/60 p-5">
+                      <div className="skeleton h-3 w-24 rounded" />
+                      <div className="skeleton mt-4 h-6 w-16 rounded" />
+                    </div>
+                  ))
+                : kpis.map((k) => <KPICard key={k.label} {...k} />)}
+            </div>
+          </section>
+
+          {/* Section 2: Stations */}
+          <section
+            id="section-stations"
+            className={getSectionClass("stations")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "stations") handleNavSelect("stations");
+            }}
+          >
+            {focusedSection === "stations" && (
+              <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
+                  AWS Network Observation & Station Inspector
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              </div>
+            )}
+            <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-[14px] font-semibold text-white">AWS Network</h2>
+                  <span className="text-[12px] text-ink-faint">{stations.length} stations shown</span>
+                </div>
+                <NetworkMap stations={stations} selectedId={selectedStationId} onSelect={setSelectedStationId} />
+              </div>
+              <div>
+                <h2 className="mb-3 text-[14px] font-semibold text-white">Station Inspector</h2>
+                <div className="h-[460px] lg:h-[520px]">
+                  <StationInspector station={selectedStation} onViewDetails={() => openAnomalyDetail(anomalyList[0])} />
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Sensor charts */}
-          <div>
-            <h2 className="mb-3 text-[14px] font-semibold text-white">Live Sensor Charts — {selectedStation?.id ?? "AWS-DEL-01"}</h2>
+          {/* Section 3: Live Monitoring */}
+          <section
+            id="section-monitoring"
+            className={getSectionClass("monitoring")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "monitoring") handleNavSelect("monitoring");
+            }}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[14px] font-semibold text-white">Live Sensor Charts — {selectedStation?.id ?? "AWS-DEL-01"}</h2>
+              {focusedSection === "monitoring" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              )}
+            </div>
             <div className="grid gap-4 lg:grid-cols-3">
               <SensorChart
                 title="Temperature"
@@ -355,16 +485,81 @@ export default function Dashboard() {
                 current={humidityCurrent}
               />
             </div>
-          </div>
+          </section>
 
-          {/* Anomaly table */}
-          <div>
+          {/* Section 4: Recent Anomalies */}
+          <section
+            id="section-anomalies"
+            className={getSectionClass("anomalies")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "anomalies") handleNavSelect("anomalies");
+            }}
+          >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[14px] font-semibold text-white">Recent Anomalies</h2>
-              <span className="text-[12px] text-ink-faint">Click a row for full explainability</span>
+              <div>
+                <h2 className="text-[14px] font-semibold text-white">Recent Anomalies</h2>
+                <span className="text-[12px] text-ink-faint">Click a row for full explainability</span>
+              </div>
+              {focusedSection === "anomalies" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              )}
             </div>
             <AnomalyTable anomalies={anomalyList} onSelect={openAnomalyDetail} />
-          </div>
+          </section>
+
+          {/* Section 5: AI Analytics & Diagnostics */}
+          <section
+            id="section-analytics"
+            className={getSectionClass("analytics")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "analytics") handleNavSelect("analytics");
+            }}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-[14px] font-semibold text-white">AI Analytics & Root Cause Explainability</h2>
+                <span className="text-[12px] text-ink-faint">SHAP feature attributions, model diagnostics & maintenance risk</span>
+              </div>
+              {focusedSection === "analytics" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              )}
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <AIInsight
+                assessment={
+                  selectedAnomaly?.aiAssessment ||
+                  ANOMALY_DETAIL.aiAssessment ||
+                  "Automated sensor telemetry evaluation detected potential deviation in environmental readings."
+                }
+                rootCause={selectedAnomaly?.probableRootCause || ANOMALY_DETAIL.probableRootCause || "Sensor Drift"}
+                action={selectedAnomaly?.recommendedAction || ANOMALY_DETAIL.recommendedAction || "Verify station calibration."}
+              />
+              <ShapChart
+                contributions={selectedAnomaly?.shapContributions || SHAP_CONTRIBUTIONS}
+              />
+              <MaintenanceRisk
+                level={selectedAnomaly?.maintenanceRisk?.level || ANOMALY_DETAIL.maintenanceRisk?.level || "MEDIUM-HIGH"}
+                score={selectedAnomaly?.maintenanceRisk?.score || ANOMALY_DETAIL.maintenanceRisk?.score || 78}
+                reason={selectedAnomaly?.maintenanceRisk?.reason || ANOMALY_DETAIL.maintenanceRisk?.reason || "Repeated anomalies flagged in recent observation cycles."}
+              />
+            </div>
+          </section>
         </main>
       </div>
 
