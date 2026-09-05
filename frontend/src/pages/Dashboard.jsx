@@ -105,8 +105,56 @@ export default function Dashboard() {
   const dismissToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
   const openAnomalyDetail = (anomaly) => {
-    setSelectedAnomaly({ ...ANOMALY_DETAIL, station: anomaly.station, severity: anomaly.severity, confidence: anomaly.confidence });
+    if (!anomaly) return;
+    const obsVal = typeof anomaly.observed === "number" ? anomaly.observed : parseFloat(anomaly.observed) || ANOMALY_DETAIL.observed;
+    const expVal = typeof anomaly.expected === "number" ? anomaly.expected : parseFloat(anomaly.expected) || ANOMALY_DETAIL.expected;
+    const param = anomaly.parameter || ANOMALY_DETAIL.parameter;
+    const unit = param === "Temperature" ? "°C" : param === "Pressure" ? " hPa" : "%";
+
+    setSelectedAnomaly({
+      ...ANOMALY_DETAIL,
+      id: anomaly.id || ANOMALY_DETAIL.id,
+      station: anomaly.station || ANOMALY_DETAIL.station,
+      stationName: anomaly.stationName ? (anomaly.stationName.includes("India") ? anomaly.stationName : `${anomaly.stationName}, India`) : ANOMALY_DETAIL.stationName,
+      parameter: param,
+      severity: anomaly.severity || ANOMALY_DETAIL.severity,
+      confidence: anomaly.confidence || ANOMALY_DETAIL.confidence,
+      observed: obsVal,
+      expected: expVal,
+      correction: expVal,
+      probableRootCause: anomaly.rootCause || anomaly.probableRootCause || `${anomaly.rootCause || "Sensor Spike"} / Possible Sensor Malfunction`,
+      aiAssessment: anomaly.aiAssessment || `${param} shifted from expected ${expVal}${unit} to observed ${obsVal}${unit} at ${anomaly.station}. The magnitude and rate of change are inconsistent with recent temporal baselines.`,
+      recommendedAction: anomaly.recommendedAction || `Inspect ${param.toLowerCase()} sensor hardware and verify calibration against station baseline.`,
+      maintenanceRisk: anomaly.maintenanceRisk || {
+        level: anomaly.severity === "critical" ? "MEDIUM-HIGH" : "MEDIUM",
+        score: anomaly.severity === "critical" ? 74 : 52,
+        reason: `Repeated ${param.toLowerCase()} anomalies detected for ${anomaly.station} in the last 24 hours.`
+      },
+      shapContributions: anomaly.shapContributions || ANOMALY_DETAIL.shapContributions
+    });
     setPanelOpen(true);
+  };
+
+  const openStationDetail = (station) => {
+    if (!station) return;
+    const existingAnomaly = anomalyList.find((a) => a.station === station.id);
+    if (existingAnomaly) {
+      openAnomalyDetail(existingAnomaly);
+    } else {
+      const isAnom = station.status === "anomaly";
+      const isWarn = station.status === "warning";
+      openAnomalyDetail({
+        id: `STN-${station.id.replace("AWS-", "")}`,
+        station: station.id,
+        stationName: station.name,
+        parameter: "Temperature",
+        observed: station.temp,
+        expected: Number((station.temp + (isAnom ? -12.4 : 0.2)).toFixed(1)),
+        severity: isAnom ? "critical" : isWarn ? "warning" : "normal",
+        confidence: isAnom ? 96.4 : isWarn ? 82.5 : 99.1,
+        rootCause: isAnom ? "Sensor Spike" : "Nominal Sensor Operation"
+      });
+    }
   };
 
   const kpis = useMemo(
@@ -148,15 +196,37 @@ export default function Dashboard() {
     [observations, activeAnomalies]
   );
 
-  const tempCurrent = SENSOR_SERIES[SENSOR_SERIES.length - 1].temp;
-  const tempMin = Math.min(...SENSOR_SERIES.map((d) => d.temp));
-  const tempMax = Math.max(...SENSOR_SERIES.map((d) => d.temp));
-  const pressureCurrent = SENSOR_SERIES[SENSOR_SERIES.length - 1].pressure;
-  const pressureMin = Math.min(...SENSOR_SERIES.map((d) => d.pressure));
-  const pressureMax = Math.max(...SENSOR_SERIES.map((d) => d.pressure));
-  const humidityCurrent = SENSOR_SERIES[SENSOR_SERIES.length - 1].humidity;
-  const humidityMin = Math.min(...SENSOR_SERIES.map((d) => d.humidity));
-  const humidityMax = Math.max(...SENSOR_SERIES.map((d) => d.humidity));
+  const currentSeries = useMemo(() => {
+    if (!selectedStation) return SENSOR_SERIES;
+    const isDelhiAnomaly = selectedStation.id === "AWS-DEL-01";
+    const baseTemp = selectedStation.temp;
+    const basePressure = selectedStation.pressure;
+    const baseHumidity = selectedStation.humidity;
+
+    return SENSOR_SERIES.map((pt) => {
+      const isAnomalyPoint = isDelhiAnomaly && pt.anomaly;
+      const tDiff = pt.temp - 24.7;
+      const pDiff = pt.pressure - 1012.6;
+      const hDiff = pt.humidity - 67;
+      return {
+        ...pt,
+        temp: isAnomalyPoint ? 55.0 : Number((baseTemp + tDiff * 0.4).toFixed(1)),
+        pressure: Number((basePressure + pDiff * 0.5).toFixed(1)),
+        humidity: Math.max(10, Math.min(100, Number((baseHumidity + hDiff * 0.4).toFixed(1)))),
+        anomaly: isAnomalyPoint,
+      };
+    });
+  }, [selectedStation]);
+
+  const tempCurrent = currentSeries[currentSeries.length - 1].temp;
+  const tempMin = Math.min(...currentSeries.map((d) => d.temp));
+  const tempMax = Math.max(...currentSeries.map((d) => d.temp));
+  const pressureCurrent = currentSeries[currentSeries.length - 1].pressure;
+  const pressureMin = Math.min(...currentSeries.map((d) => d.pressure));
+  const pressureMax = Math.max(...currentSeries.map((d) => d.pressure));
+  const humidityCurrent = currentSeries[currentSeries.length - 1].humidity;
+  const humidityMin = Math.min(...currentSeries.map((d) => d.humidity));
+  const humidityMax = Math.max(...currentSeries.map((d) => d.humidity));
 
   return (
     <div className="flex min-h-screen bg-base-950">
@@ -221,7 +291,7 @@ export default function Dashboard() {
             <div>
               <h2 className="mb-3 text-[14px] font-semibold text-white">Station Inspector</h2>
               <div className="h-[460px] lg:h-[520px]">
-                <StationInspector station={selectedStation} onViewDetails={() => openAnomalyDetail(anomalyList[0])} />
+                <StationInspector station={selectedStation} onViewDetails={() => openStationDetail(selectedStation)} />
               </div>
             </div>
           </div>
@@ -232,7 +302,7 @@ export default function Dashboard() {
             <div className="grid gap-4 lg:grid-cols-3">
               <SensorChart
                 title="Temperature"
-                data={SENSOR_SERIES}
+                data={currentSeries}
                 dataKey="temp"
                 unit="°C"
                 color="#4bbcdc"
@@ -242,7 +312,7 @@ export default function Dashboard() {
               />
               <SensorChart
                 title="Atmospheric Pressure"
-                data={SENSOR_SERIES}
+                data={currentSeries}
                 dataKey="pressure"
                 unit=" hPa"
                 color="#7ad4ec"
@@ -252,7 +322,7 @@ export default function Dashboard() {
               />
               <SensorChart
                 title="Relative Humidity"
-                data={SENSOR_SERIES}
+                data={currentSeries}
                 dataKey="humidity"
                 unit="%"
                 color="#5fd3f0"
