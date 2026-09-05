@@ -163,16 +163,17 @@ export default function Dashboard() {
     if (!anomaly) return;
     try {
       const detail = await getAnomalyDetail(anomaly.id);
-      setSelectedAnomaly(detail);
+      if (detail && detail.station === anomaly.station) {
+        setSelectedAnomaly(detail);
+      } else {
+        const stationObj = stations.find((s) => s.id === anomaly.station);
+        const stnDetail = getStationDetailData(anomaly.station, stationObj, anomaly);
+        setSelectedAnomaly(stnDetail);
+      }
     } catch {
       const stationObj = stations.find((s) => s.id === anomaly.station);
-      const detail = getStationDetailData(anomaly.station, stationObj);
-      setSelectedAnomaly({
-        ...detail,
-        id: anomaly.id || detail.id,
-        severity: anomaly.severity || detail.severity,
-        confidence: anomaly.confidence || detail.confidence,
-      });
+      const detail = getStationDetailData(anomaly.station, stationObj, anomaly);
+      setSelectedAnomaly(detail);
     }
     setPanelOpen(true);
   };
@@ -180,7 +181,8 @@ export default function Dashboard() {
   // Open diagnostics for the currently selected station from StationInspector
   const openStationDetail = (station) => {
     if (!station) return;
-    const detail = getStationDetailData(station.id, station);
+    const existingAnomaly = anomalyList.find((a) => a.station === station.id);
+    const detail = getStationDetailData(station.id, station, existingAnomaly);
     setSelectedAnomaly(detail);
     setPanelOpen(true);
   };
@@ -189,39 +191,49 @@ export default function Dashboard() {
   const handleSimulateAnomaly = async () => {
     setIsSimulating(true);
     try {
-      const res = await triggerSimulateAnomaly(selectedStationId || "AWS-DEL-01", "spike");
-      if (res?.detail) {
-        const detail = res.detail;
-        const newEntry = {
-          id: detail.id || `AN-${Math.floor(Math.random() * 90000) + 10000}`,
-          time: formatClock(new Date()),
-          station: detail.station,
-          stationName: detail.stationName || "Delhi",
-          parameter: detail.parameter || "Temperature",
-          observed: `${detail.observed}°C`,
-          expected: `${detail.expected}°C`,
-          severity: detail.severity || "critical",
-          confidence: detail.confidence || 98.5,
-          rootCause: detail.probableRootCause || "Sensor Spike",
-        };
-        setAnomalyList((prev) => [newEntry, ...prev].slice(0, 15));
-        setActiveAnomalies((n) => n + 1);
-        setStations((prev) =>
-          prev.map((s) => (s.id === detail.station ? { ...s, status: "anomaly", health: Math.max(25, s.health - 8) } : s))
-        );
+      const targetStation = stations.find((s) => s.id === selectedStationId) || stations[0];
+      const res = await triggerSimulateAnomaly(targetStation.id, "spike");
+      
+      const stnName = targetStation.name || "Station";
+      const baseExpected = targetStation.temp > 45 ? 14.2 : (targetStation.temp || 24.6);
+      const detail = (res?.detail && res.detail.station === targetStation.id)
+        ? res.detail
+        : getStationDetailData(targetStation.id, { ...targetStation, status: "anomaly", temp: 55.0 });
 
-        // Refresh series to display newly injected spike
-        const updatedSeries = await getStationSeries(selectedStationId);
-        if (updatedSeries && updatedSeries.length > 0) {
-          setStationSeries(updatedSeries);
-        }
+      const newEntry = {
+        id: detail.id || `AN-${Math.floor(Math.random() * 90000) + 10000}`,
+        time: formatClock(new Date()),
+        station: targetStation.id,
+        stationName: `${stnName}, India`,
+        parameter: "Temperature",
+        observed: "55.0°C",
+        expected: `${baseExpected}°C`,
+        severity: "critical",
+        confidence: 98.5,
+        rootCause: "Sensor Spike / Hardware Spike",
+      };
 
-        const id = ++toastIdRef.current;
-        setToasts((prev) => [...prev, { id, station: detail.station, parameter: detail.parameter, confidence: detail.confidence }]);
-        setTimeout(() => {
-          setToasts((prev) => prev.filter((t) => t.id !== id));
-        }, 5000);
+      setAnomalyList((prev) => [newEntry, ...prev.filter((a) => a.id !== newEntry.id)].slice(0, 15));
+      setActiveAnomalies((n) => n + 1);
+      setStations((prev) =>
+        prev.map((s) =>
+          s.id === targetStation.id
+            ? { ...s, status: "anomaly", temp: 55.0, health: Math.max(25, s.health - 8) }
+            : s
+        )
+      );
+
+      // Refresh series to display newly injected spike
+      const updatedSeries = await getStationSeries(targetStation.id);
+      if (updatedSeries && updatedSeries.length > 0) {
+        setStationSeries(updatedSeries);
       }
+
+      const id = ++toastIdRef.current;
+      setToasts((prev) => [...prev, { id, station: targetStation.id, parameter: "Temperature", confidence: 98.5 }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 5000);
     } catch (err) {
       console.error("Simulation error:", err);
     } finally {

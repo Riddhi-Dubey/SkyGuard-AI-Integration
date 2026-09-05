@@ -83,12 +83,9 @@ export async function getAnomalyDetail(anomalyId) {
     console.debug(`Backend offline, utilizing anomaly detail fallback for ${anomalyId}:`, err.message);
     const matched = ANOMALIES.find((a) => a.id === anomalyId);
     if (matched) {
-      return getStationDetailData(matched.station);
+      return getStationDetailData(matched.station, null, matched);
     }
-    return {
-      ...ANOMALY_DETAIL,
-      id: anomalyId,
-    };
+    return null;
   }
 }
 
@@ -102,14 +99,12 @@ export async function triggerSimulateAnomaly(stationId = "AWS-DEL-01", anomalyTy
     return data;
   } catch (err) {
     console.debug("Backend offline, simulating locally:", err.message);
+    const station = STATIONS.find((s) => s.id === stationId) || STATIONS[0];
+    const generatedDetail = getStationDetailData(stationId, { ...station, status: "anomaly", temp: 55.0 });
     return {
       status: "processed",
       anomaly: true,
-      detail: {
-        ...ANOMALY_DETAIL,
-        id: `AN-${Math.floor(Math.random() * 90000) + 10000}`,
-        station: stationId,
-      }
+      detail: generatedDetail,
     };
   }
 }
