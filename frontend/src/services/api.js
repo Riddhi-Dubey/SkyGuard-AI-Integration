@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SkyGuard AI — API Client Service
  * SIH 2026 Problem Statement 26073
  * 
@@ -13,6 +13,7 @@ import {
   KPI_SPARKLINES,
   ANOMALIES,
   ANOMALY_DETAIL,
+  getStationDetailData,
 } from "../data/mockData";
 
 const API_BASE = import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
@@ -80,6 +81,10 @@ export async function getAnomalyDetail(anomalyId) {
     return data;
   } catch (err) {
     console.debug(`Backend offline, utilizing anomaly detail fallback for ${anomalyId}:`, err.message);
+    const matched = ANOMALIES.find((a) => a.id === anomalyId);
+    if (matched) {
+      return getStationDetailData(matched.station);
+    }
     return {
       ...ANOMALY_DETAIL,
       id: anomalyId,

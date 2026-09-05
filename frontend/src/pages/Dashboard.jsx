@@ -20,6 +20,8 @@ import {
   ANOMALY_DETAIL,
   ANOMALY_STATION_ID,
   SHAP_CONTRIBUTIONS,
+  getStationDetailData,
+  buildSeries,
 } from "../data/mockData";
 import {
   getStations,
@@ -161,38 +163,15 @@ export default function Dashboard() {
     if (!anomaly) return;
     try {
       const detail = await getAnomalyDetail(anomaly.id);
+      setSelectedAnomaly(detail);
+    } catch {
+      const stationObj = stations.find((s) => s.id === anomaly.station);
+      const detail = getStationDetailData(anomaly.station, stationObj);
       setSelectedAnomaly({
         ...detail,
-        station: anomaly.station || detail.station,
+        id: anomaly.id || detail.id,
         severity: anomaly.severity || detail.severity,
         confidence: anomaly.confidence || detail.confidence,
-      });
-    } catch {
-      const obsVal = typeof anomaly.observed === "number" ? anomaly.observed : parseFloat(anomaly.observed) || ANOMALY_DETAIL.observed;
-      const expVal = typeof anomaly.expected === "number" ? anomaly.expected : parseFloat(anomaly.expected) || ANOMALY_DETAIL.expected;
-      const param = anomaly.parameter || ANOMALY_DETAIL.parameter;
-      const unit = param === "Temperature" ? "°C" : param === "Pressure" ? " hPa" : "%";
-
-      setSelectedAnomaly({
-        ...ANOMALY_DETAIL,
-        id: anomaly.id || ANOMALY_DETAIL.id,
-        station: anomaly.station || ANOMALY_DETAIL.station,
-        stationName: anomaly.stationName ? (anomaly.stationName.includes("India") ? anomaly.stationName : `${anomaly.stationName}, India`) : ANOMALY_DETAIL.stationName,
-        parameter: param,
-        severity: anomaly.severity || ANOMALY_DETAIL.severity,
-        confidence: anomaly.confidence || ANOMALY_DETAIL.confidence,
-        observed: obsVal,
-        expected: expVal,
-        correction: expVal,
-        probableRootCause: anomaly.rootCause || anomaly.probableRootCause || `${anomaly.rootCause || "Sensor Spike"} / Possible Sensor Malfunction`,
-        aiAssessment: anomaly.aiAssessment || `${param} shifted from expected ${expVal}${unit} to observed ${obsVal}${unit} at ${anomaly.station}. The magnitude and rate of change are inconsistent with recent temporal baselines.`,
-        recommendedAction: anomaly.recommendedAction || `Inspect ${param.toLowerCase()} sensor hardware and verify calibration against station baseline.`,
-        maintenanceRisk: anomaly.maintenanceRisk || {
-          level: anomaly.severity === "critical" ? "MEDIUM-HIGH" : "MEDIUM",
-          score: anomaly.severity === "critical" ? 74 : 52,
-          reason: `Repeated ${param.toLowerCase()} anomalies detected for ${anomaly.station} in the last 24 hours.`
-        },
-        shapContributions: anomaly.shapContributions || ANOMALY_DETAIL.shapContributions
       });
     }
     setPanelOpen(true);
@@ -201,24 +180,9 @@ export default function Dashboard() {
   // Open diagnostics for the currently selected station from StationInspector
   const openStationDetail = (station) => {
     if (!station) return;
-    const existingAnomaly = anomalyList.find((a) => a.station === station.id);
-    if (existingAnomaly) {
-      openAnomalyDetail(existingAnomaly);
-    } else {
-      const isAnom = station.status === "anomaly";
-      const isWarn = station.status === "warning";
-      openAnomalyDetail({
-        id: `STN-${station.id.replace("AWS-", "")}`,
-        station: station.id,
-        stationName: station.name,
-        parameter: "Temperature",
-        observed: station.temp,
-        expected: Number((station.temp + (isAnom ? -12.4 : 0.2)).toFixed(1)),
-        severity: isAnom ? "critical" : isWarn ? "warning" : "normal",
-        confidence: isAnom ? 96.4 : isWarn ? 82.5 : 99.1,
-        rootCause: isAnom ? "Sensor Spike" : "Nominal Sensor Operation"
-      });
-    }
+    const detail = getStationDetailData(station.id, station);
+    setSelectedAnomaly(detail);
+    setPanelOpen(true);
   };
 
   // Interactive Anomaly Simulation
@@ -304,7 +268,20 @@ export default function Dashboard() {
     [observations, activeAnomalies, stationsOnline, networkHealth, sparklines]
   );
 
-  const seriesToUse = stationSeries && stationSeries.length > 0 ? stationSeries : SENSOR_SERIES;
+  // Synchronize 60-minute sensor series to live clock and selected station
+  const seriesToUse = useMemo(() => {
+    const rawSeries = stationSeries && stationSeries.length > 0 ? stationSeries : buildSeries(clock, selectedStation);
+    return rawSeries.map((pt, idx) => {
+      const minutesAgo = pt.minutesAgo !== undefined ? pt.minutesAgo : (59 - idx);
+      const ptTime = new Date(clock.getTime() - minutesAgo * 60000);
+      const timeLabel = ptTime.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false });
+      return {
+        ...pt,
+        time: timeLabel,
+      };
+    });
+  }, [stationSeries, clock, selectedStation]);
+
   const tempCurrent = seriesToUse[seriesToUse.length - 1]?.temp ?? 24.6;
   const tempMin = Math.min(...seriesToUse.map((d) => d.temp));
   const tempMax = Math.max(...seriesToUse.map((d) => d.temp));

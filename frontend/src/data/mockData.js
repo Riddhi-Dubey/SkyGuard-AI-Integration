@@ -19,25 +19,31 @@ export const STATIONS = [
 export const ANOMALY_STATION_ID = "AWS-DEL-01";
 
 // 60 minutes of synthetic per-minute readings for the currently selected station.
-// Index 52 (10:41:52-ish) carries the injected temperature spike used across the dashboard.
-function buildSeries() {
+export function buildSeries(baseDate = new Date("2026-08-30T10:42:18"), station = null) {
   const points = [];
-  const now = new Date("2026-08-30T10:42:18");
+  const baseTemp = station?.temp ?? 24.6;
+  const basePressure = station?.pressure ?? 1012.4;
+  const baseHumidity = station?.humidity ?? 68.0;
+  const isDelhi = station?.id === "AWS-DEL-01" || !station;
+
   for (let i = 59; i >= 0; i--) {
-    const t = new Date(now.getTime() - i * 60000);
-    const label = t.toTimeString().slice(0, 5);
-    const wobble = Math.sin(i / 6) * 0.6 + (Math.random() - 0.5) * 0.4;
-    let temp = 24.7 + wobble;
-    let pressure = 1012.6 - i * 0.003 + (Math.random() - 0.5) * 0.15;
-    let humidity = 67 + Math.cos(i / 9) * 2.5 + (Math.random() - 0.5) * 1.2;
-    const isAnomaly = i === 7; // near the end of the window, i.e. ~10:41:52
+    const t = new Date(baseDate.getTime() - i * 60000);
+    const label = t.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false });
+    const wobble = Math.sin(i / 6) * 0.4 + (Math.random() - 0.5) * 0.2;
+    let temp = baseTemp + wobble;
+    let pressure = basePressure - i * 0.002 + (Math.random() - 0.5) * 0.1;
+    let humidity = baseHumidity + Math.cos(i / 9) * 1.5 + (Math.random() - 0.5) * 0.8;
+    
+    // Anomaly spike on Delhi at minute 7
+    const isAnomaly = isDelhi && i === 7;
     if (isAnomaly) temp = 55.0;
+
     points.push({
       time: label,
       minutesAgo: i,
       temp: Number(temp.toFixed(1)),
       pressure: Number(pressure.toFixed(1)),
-      humidity: Number(humidity.toFixed(1)),
+      humidity: Number(Math.max(10, Math.min(100, humidity)).toFixed(1)),
       anomaly: isAnomaly,
     });
   }
@@ -70,7 +76,7 @@ export const ANOMALIES = [
     stationName: "Delhi",
     parameter: "Temperature",
     observed: "55.0°C",
-    expected: "24.7°C",
+    expected: "24.6°C",
     severity: "critical",
     confidence: 96.8,
     rootCause: "Sensor Spike",
@@ -81,11 +87,11 @@ export const ANOMALIES = [
     station: "AWS-MUM-04",
     stationName: "Mumbai",
     parameter: "Humidity",
-    observed: "99.9%",
+    observed: "78.0%",
     expected: "72.4%",
     severity: "warning",
     confidence: 87.2,
-    rootCause: "Possible Sensor Drift",
+    rootCause: "Calibration Drift",
   },
   {
     id: "AN-10227",
@@ -93,8 +99,8 @@ export const ANOMALIES = [
     station: "AWS-JAI-02",
     stationName: "Jaipur",
     parameter: "Pressure",
-    observed: "—",
-    expected: "1008.2 hPa",
+    observed: "1008.2 hPa",
+    expected: "1012.0 hPa",
     severity: "critical",
     confidence: 99.1,
     rootCause: "Communication Failure",
@@ -105,7 +111,7 @@ export const ANOMALIES = [
     station: "AWS-GHY-08",
     stationName: "Guwahati",
     parameter: "Humidity",
-    observed: "86.4%",
+    observed: "86.0%",
     expected: "79.1%",
     severity: "warning",
     confidence: 74.6,
@@ -117,7 +123,7 @@ export const ANOMALIES = [
     station: "AWS-DEL-01",
     stationName: "Delhi",
     parameter: "Temperature",
-    observed: "24.9°C",
+    observed: "24.8°C",
     expected: "24.6°C",
     severity: "normal",
     confidence: 34.2,
@@ -157,25 +163,178 @@ export const ANOMALY_DETAIL = {
   severity: "critical",
   confidence: 96.8,
   observed: 55.0,
-  expected: 24.7,
-  correction: 24.8,
+  expected: 24.6,
+  correction: 24.6,
   correctionMethod: "Temporal interpolation + local station context",
-  correctionConfidence: 91.4,
+  correctionConfidence: 95.4,
   aiAssessment:
-    "Temperature increased from 24.7°C to 55.0°C within one observation interval while pressure and humidity remained within expected ranges. The magnitude and rate of change are inconsistent with the station's recent temporal pattern.",
+    "Temperature shifted abruptly from expected 24.6°C to observed 55.0°C within one observation interval while adjacent atmospheric parameters remained consistent. The magnitude and rate of change are inconsistent with the station's recent temporal pattern.",
   probableRootCause: "Sensor Spike / Possible Sensor Malfunction",
   recommendedAction: "Inspect temperature sensor and verify calibration.",
   maintenanceRisk: {
     level: "MEDIUM-HIGH",
-    score: 78,
+    score: 74,
     reason: "Repeated temperature anomalies detected in the last 24 hours.",
   },
+  shapContributions: [
+    { feature: "Temperature Delta", value: 0.82 },
+    { feature: "Rolling Temperature Std", value: 0.61 },
+    { feature: "Temperature", value: 0.31 },
+    { feature: "Humidity", value: 0.08 },
+    { feature: "Pressure", value: 0.03 },
+  ],
 };
 
+export function getStationDetailData(stationId, stationOverride = null) {
+  const station = stationOverride || STATIONS.find((s) => s.id === stationId) || STATIONS[0];
+  
+  if (station.id === "AWS-DEL-01") {
+    return {
+      ...ANOMALY_DETAIL,
+      id: "AN-10231",
+      station: "AWS-DEL-01",
+      stationName: "Delhi, India",
+      parameter: "Temperature",
+      observed: 55.0,
+      expected: 24.6,
+      correction: 24.6,
+      severity: "critical",
+      confidence: 96.8,
+      probableRootCause: "Sensor Spike / Hardware Spike",
+      aiAssessment: "Temperature shifted abruptly from expected 24.6°C to observed 55.0°C within one observation interval. Temporal gradient exceeds physical threshold of 5°C/10min.",
+      recommendedAction: "Inspect temperature transducer wiring and recalibrate against station baseline.",
+      maintenanceRisk: { level: "MEDIUM-HIGH", score: 74, reason: "5 anomaly events logged in the last 24 hours." },
+      shapContributions: [
+        { feature: "Temperature Delta", value: 0.85 },
+        { feature: "Rolling Temperature Std", value: 0.62 },
+        { feature: "Temperature", value: 0.30 },
+        { feature: "Humidity", value: 0.07 },
+        { feature: "Pressure", value: 0.02 },
+      ]
+    };
+  }
+
+  if (station.id === "AWS-MUM-04") {
+    return {
+      id: "AN-10229",
+      station: "AWS-MUM-04",
+      stationName: "Mumbai, India",
+      parameter: "Humidity",
+      observed: station.humidity ?? 78.0,
+      expected: 72.4,
+      correction: 72.4,
+      severity: "warning",
+      confidence: 87.2,
+      correctionMethod: "Temporal interpolation + coastal humidity baseline",
+      correctionConfidence: 91.2,
+      probableRootCause: "Calibration Drift / Moisture Saturation",
+      aiAssessment: `Relative humidity at AWS-MUM-04 (Mumbai) has drifted to ${station.humidity ?? 78.0}% (expected baseline 72.4%). Gradual calibration drift detected in capacitive humidity transducer.`,
+      recommendedAction: "Perform in-situ hygrometer calibration and check sensor filter cap for particulate contamination.",
+      maintenanceRisk: { level: "MEDIUM", score: 52, reason: "3 humidity drift warnings recorded in last 24 hours." },
+      shapContributions: [
+        { feature: "Rolling Humidity Std", value: 0.76 },
+        { feature: "Humidity Delta", value: 0.54 },
+        { feature: "Humidity", value: 0.42 },
+        { feature: "Temperature", value: 0.12 },
+        { feature: "Pressure", value: 0.05 },
+      ]
+    };
+  }
+
+  if (station.id === "AWS-GHY-08") {
+    return {
+      id: "AN-10224",
+      station: "AWS-GHY-08",
+      stationName: "Guwahati, India",
+      parameter: "Humidity",
+      observed: station.humidity ?? 86.0,
+      expected: 79.1,
+      correction: 79.1,
+      severity: "warning",
+      confidence: 74.6,
+      correctionMethod: "Regional baseline interpolation",
+      correctionConfidence: 89.4,
+      probableRootCause: "Sensor Calibration Drift",
+      aiAssessment: `Guwahati AWS sensor reported ${station.humidity ?? 86.0}% relative humidity against regional expected baseline of 79.1%. Slow progressive drift identified across 6 observation cycles.`,
+      recommendedAction: "Schedule field technician inspection for sensor recalibration during next maintenance cycle.",
+      maintenanceRisk: { level: "MEDIUM", score: 48, reason: "2 telemetry deviations noted in last 24 hours." },
+      shapContributions: [
+        { feature: "Rolling Humidity Std", value: 0.68 },
+        { feature: "Humidity", value: 0.51 },
+        { feature: "Humidity Delta", value: 0.38 },
+        { feature: "Pressure", value: 0.10 },
+        { feature: "Temperature", value: 0.04 },
+      ]
+    };
+  }
+
+  if (station.id === "AWS-JAI-02") {
+    return {
+      id: "AN-10227",
+      station: "AWS-JAI-02",
+      stationName: "Jaipur, India",
+      parameter: "Pressure",
+      observed: station.pressure ?? 1008.2,
+      expected: 1012.0,
+      correction: 1012.0,
+      severity: "critical",
+      confidence: 99.1,
+      correctionMethod: "Atmospheric barometric gradient compensation",
+      correctionConfidence: 96.0,
+      probableRootCause: "Barometer Range Deviation / Possible Port Blockage",
+      aiAssessment: `Atmospheric pressure sensor at Jaipur station dropped to ${station.pressure ?? 1008.2} hPa compared to local network average of 1012.0 hPa without meteorological storm indicators.`,
+      recommendedAction: "Inspect barometric pressure port for physical blockage or venting tube obstruction.",
+      maintenanceRisk: { level: "HIGH", score: 85, reason: "Frequent pressure drops and missing packets in last 24 hours." },
+      shapContributions: [
+        { feature: "Pressure Delta", value: 0.88 },
+        { feature: "Pressure", value: 0.72 },
+        { feature: "Rolling Pressure Std", value: 0.49 },
+        { feature: "Temperature", value: 0.08 },
+        { feature: "Humidity", value: 0.03 },
+      ]
+    };
+  }
+
+  // Nominal / Healthy Stations (Kolkata, Chennai, Bengaluru, Hyderabad, Lucknow, Bhopal, Ahmedabad, Srinagar)
+  const isHealthy = station.status === "healthy" || !station.status;
+  const temp = station.temp ?? 25.0;
+  const pressure = station.pressure ?? 1012.0;
+  const humidity = station.humidity ?? 60.0;
+
+  return {
+    id: `STN-${station.id.replace("AWS-", "")}`,
+    station: station.id,
+    stationName: `${station.name}, India`,
+    parameter: "Temperature",
+    observed: temp,
+    expected: temp,
+    correction: temp,
+    severity: isHealthy ? "normal" : "warning",
+    confidence: isHealthy ? 99.2 : 82.4,
+    correctionMethod: "Nominal telemetry — No correction required",
+    correctionConfidence: 99.0,
+    probableRootCause: "Nominal Sensor Operation / No Fault Detected",
+    aiAssessment: `Telemetry for station ${station.id} (${station.name}) is operating within nominal meteorological baselines. Ambient temperature is ${temp}°C, atmospheric pressure is ${pressure} hPa, and relative humidity is ${humidity}%. All sensors pass physical consistency checks.`,
+    recommendedAction: "No action required. Station health is verified nominal.",
+    maintenanceRisk: {
+      level: "LOW",
+      score: 12,
+      reason: "0 critical anomalies recorded in the last 24 hours. Normal operating telemetry.",
+    },
+    shapContributions: [
+      { feature: "Temperature", value: 0.12 },
+      { feature: "Pressure", value: 0.09 },
+      { feature: "Humidity", value: 0.08 },
+      { feature: "Temperature Delta", value: 0.03 },
+      { feature: "Rolling Temperature Std", value: 0.02 },
+    ]
+  };
+}
+
 export const SHAP_CONTRIBUTIONS = [
-  { feature: "Temperature", value: 0.82 },
-  { feature: "Temperature Delta", value: 0.61 },
-  { feature: "Rolling Temperature Mean", value: 0.31 },
+  { feature: "Temperature Delta", value: 0.82 },
+  { feature: "Rolling Temperature Std", value: 0.61 },
+  { feature: "Temperature", value: 0.31 },
   { feature: "Humidity", value: 0.08 },
   { feature: "Pressure", value: 0.03 },
 ];
