@@ -4,9 +4,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import joblib
 
-def run_evaluation(predictions_path="ml/outputs/predictions.csv", output_dir="ml/outputs"):
+def run_evaluation(predictions_path=None, output_dir=None):
     print("=== Model Evaluation Starting ===")
     
+    if predictions_path is None:
+        candidates = [
+            "outputs/predictions.csv",
+            "ml/outputs/predictions.csv",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs", "predictions.csv"),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ml", "outputs", "predictions.csv"),
+        ]
+        for p in candidates:
+            if os.path.exists(p):
+                predictions_path = p
+                break
+        if not predictions_path:
+            predictions_path = "outputs/predictions.csv"
+
+    if output_dir is None:
+        output_dir = os.path.dirname(predictions_path) or "outputs"
+        
     if not os.path.exists(predictions_path):
         raise FileNotFoundError(f"Predictions dataset not found at {predictions_path}")
         
@@ -138,14 +155,21 @@ def run_evaluation(predictions_path="ml/outputs/predictions.csv", output_dir="ml
     # 6. Global SHAP explainability
     print("\nGenerating Global SHAP feature importances...")
     try:
-        from ml.src.explain import generate_global_summary
+        try:
+            from ml.src.explain import generate_global_summary
+        except ImportError:
+            try:
+                from src.explain import generate_global_summary
+            except ImportError:
+                from explain import generate_global_summary
         feature_cols = [
             'temp', 'pressure', 'humidity', 
             'hour', 'month', 'day_of_year',
             'temp_roll_std_6', 'pressure_roll_std_6', 'humidity_roll_std_6',
             'temp_diff', 'pressure_diff', 'humidity_diff'
         ]
-        scaler = joblib.load("ml/models/scaler.pkl")
+        scaler_path = "models/scaler.pkl" if os.path.exists("models/scaler.pkl") else "ml/models/scaler.pkl"
+        scaler = joblib.load(scaler_path)
         X_raw = df_sorted[feature_cols]
         X_scaled = pd.DataFrame(scaler.transform(X_raw), columns=feature_cols)
         

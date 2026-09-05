@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Zap } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import KPICard from "../components/KPICard";
 import NetworkMap from "../components/NetworkMap";
@@ -7,6 +7,9 @@ import StationInspector from "../components/StationInspector";
 import SensorChart from "../components/SensorChart";
 import AnomalyTable from "../components/AnomalyTable";
 import AnomalyDetail from "../components/AnomalyDetail";
+import AIInsight from "../components/AIInsight";
+import ShapChart from "../components/ShapChart";
+import MaintenanceRisk from "../components/MaintenanceRisk";
 import Toast from "../components/Toast";
 import {
   STATIONS,
@@ -16,7 +19,16 @@ import {
   ANOMALIES,
   ANOMALY_DETAIL,
   ANOMALY_STATION_ID,
+  SHAP_CONTRIBUTIONS,
 } from "../data/mockData";
+import {
+  getStations,
+  getStationSeries,
+  getNetworkStats,
+  getAnomalies,
+  getAnomalyDetail,
+  triggerSimulateAnomaly,
+} from "../services/api";
 
 function formatClock(d) {
   return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -24,6 +36,7 @@ function formatClock(d) {
 
 export default function Dashboard() {
   const [navActive, setNavActive] = useState("overview");
+  const [focusedSection, setFocusedSection] = useState(null); // 'overview' | 'stations' | 'monitoring' | 'anomalies' | 'analytics'
   const [mobileSidebar, setMobileSidebar] = useState(false);
   const [selectedStationId, setSelectedStationId] = useState(ANOMALY_STATION_ID);
   const [anomalyList, setAnomalyList] = useState(ANOMALIES);
@@ -33,16 +46,90 @@ export default function Dashboard() {
   const [clock, setClock] = useState(new Date("2026-08-30T10:42:18"));
   const [observations, setObservations] = useState(NETWORK_STATS.observations);
   const [activeAnomalies, setActiveAnomalies] = useState(NETWORK_STATS.activeAnomalies);
+  const [networkHealth, setNetworkHealth] = useState(NETWORK_STATS.networkHealth);
+  const [stationsOnline, setStationsOnline] = useState(NETWORK_STATS.stationsOnline);
+  const [sparklines, setSparklines] = useState(KPI_SPARKLINES);
   const [loading, setLoading] = useState(true);
   const [stations, setStations] = useState(STATIONS);
+  const [stationSeries, setStationSeries] = useState(SENSOR_SERIES);
+  const [isSimulating, setIsSimulating] = useState(false);
   const toastIdRef = useRef(0);
 
   const selectedStation = stations.find((s) => s.id === selectedStationId) || null;
 
+  // Handle smooth scroll & highlight focus from sidebar
+  const handleNavSelect = (key) => {
+    setNavActive(key);
+    setFocusedSection(key);
+
+    const sectionMap = {
+      overview: "section-overview",
+      stations: "section-stations",
+      monitoring: "section-monitoring",
+      anomalies: "section-anomalies",
+      analytics: "section-analytics",
+    };
+
+    const targetId = sectionMap[key];
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
+
+  const handleClearFocus = () => {
+    setFocusedSection(null);
+  };
+
+  // Initial Data Fetch from FastAPI Backend
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 900);
-    return () => clearTimeout(t);
+    let mounted = true;
+    async function loadInitialData() {
+      try {
+        const [stns, stats, anoms] = await Promise.all([
+          getStations(),
+          getNetworkStats(),
+          getAnomalies(),
+        ]);
+        if (mounted) {
+          if (stns && stns.length > 0) setStations(stns);
+          if (stats) {
+            if (stats.observations) setObservations(stats.observations);
+            if (stats.activeAnomalies !== undefined) setActiveAnomalies(stats.activeAnomalies);
+            if (stats.networkHealth !== undefined) setNetworkHealth(stats.networkHealth);
+            if (stats.stationsOnline !== undefined) setStationsOnline(stats.stationsOnline);
+            if (stats.sparklines) setSparklines(stats.sparklines);
+          }
+          if (anoms && anoms.length > 0) setAnomalyList(anoms);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.debug("Backend initial fetch error, maintaining fallback:", err);
+        if (mounted) setLoading(false);
+      }
+    }
+    loadInitialData();
+    return () => { mounted = false; };
   }, []);
+
+  // Fetch 60-Minute Sliding Series when selected station changes
+  useEffect(() => {
+    let mounted = true;
+    async function loadSeries() {
+      try {
+        const series = await getStationSeries(selectedStationId);
+        if (mounted && series && series.length > 0) {
+          setStationSeries(series);
+        }
+      } catch (err) {
+        console.debug("Station series fetch error:", err);
+      }
+    }
+    loadSeries();
+    return () => { mounted = false; };
+  }, [selectedStationId]);
 
   // Clock + observation counter tick
   useEffect(() => {
@@ -67,74 +154,51 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Occasional simulated anomaly event
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const pool = [
-        { station: "AWS-DEL-01", stationName: "Delhi", parameter: "Temperature", observed: "54.1°C", expected: "24.9°C", rootCause: "Sensor Spike" },
-        { station: "AWS-MUM-04", stationName: "Mumbai", parameter: "Humidity", observed: "98.7%", expected: "73.1%", rootCause: "Possible Sensor Drift" },
-        { station: "AWS-GHY-08", stationName: "Guwahati", parameter: "Pressure", observed: "—", expected: "1004.6 hPa", rootCause: "Communication Failure" },
-      ];
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      const confidence = Number((85 + Math.random() * 13).toFixed(1));
-      const now = formatClock(new Date());
-
-      const entry = {
-        id: `AN-${Math.floor(Math.random() * 90000) + 10000}`,
-        time: now,
-        severity: confidence > 90 ? "critical" : "warning",
-        confidence,
-        ...pick,
-      };
-
-      setAnomalyList((prev) => [entry, ...prev].slice(0, 12));
-      setActiveAnomalies((n) => n + 1);
-      setStations((prev) =>
-        prev.map((s) => (s.id === entry.station ? { ...s, status: "anomaly", health: Math.max(30, s.health - 6) } : s))
-      );
-
-      const id = ++toastIdRef.current;
-      setToasts((prev) => [...prev, { id, station: entry.station, parameter: entry.parameter, confidence: entry.confidence }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
-    }, 22000);
-    return () => clearInterval(interval);
-  }, []);
-
   const dismissToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  const openAnomalyDetail = (anomaly) => {
+  // Open Full LangGraph Diagnostic Drawer
+  const openAnomalyDetail = async (anomaly) => {
     if (!anomaly) return;
-    const obsVal = typeof anomaly.observed === "number" ? anomaly.observed : parseFloat(anomaly.observed) || ANOMALY_DETAIL.observed;
-    const expVal = typeof anomaly.expected === "number" ? anomaly.expected : parseFloat(anomaly.expected) || ANOMALY_DETAIL.expected;
-    const param = anomaly.parameter || ANOMALY_DETAIL.parameter;
-    const unit = param === "Temperature" ? "°C" : param === "Pressure" ? " hPa" : "%";
+    try {
+      const detail = await getAnomalyDetail(anomaly.id);
+      setSelectedAnomaly({
+        ...detail,
+        station: anomaly.station || detail.station,
+        severity: anomaly.severity || detail.severity,
+        confidence: anomaly.confidence || detail.confidence,
+      });
+    } catch {
+      const obsVal = typeof anomaly.observed === "number" ? anomaly.observed : parseFloat(anomaly.observed) || ANOMALY_DETAIL.observed;
+      const expVal = typeof anomaly.expected === "number" ? anomaly.expected : parseFloat(anomaly.expected) || ANOMALY_DETAIL.expected;
+      const param = anomaly.parameter || ANOMALY_DETAIL.parameter;
+      const unit = param === "Temperature" ? "°C" : param === "Pressure" ? " hPa" : "%";
 
-    setSelectedAnomaly({
-      ...ANOMALY_DETAIL,
-      id: anomaly.id || ANOMALY_DETAIL.id,
-      station: anomaly.station || ANOMALY_DETAIL.station,
-      stationName: anomaly.stationName ? (anomaly.stationName.includes("India") ? anomaly.stationName : `${anomaly.stationName}, India`) : ANOMALY_DETAIL.stationName,
-      parameter: param,
-      severity: anomaly.severity || ANOMALY_DETAIL.severity,
-      confidence: anomaly.confidence || ANOMALY_DETAIL.confidence,
-      observed: obsVal,
-      expected: expVal,
-      correction: expVal,
-      probableRootCause: anomaly.rootCause || anomaly.probableRootCause || `${anomaly.rootCause || "Sensor Spike"} / Possible Sensor Malfunction`,
-      aiAssessment: anomaly.aiAssessment || `${param} shifted from expected ${expVal}${unit} to observed ${obsVal}${unit} at ${anomaly.station}. The magnitude and rate of change are inconsistent with recent temporal baselines.`,
-      recommendedAction: anomaly.recommendedAction || `Inspect ${param.toLowerCase()} sensor hardware and verify calibration against station baseline.`,
-      maintenanceRisk: anomaly.maintenanceRisk || {
-        level: anomaly.severity === "critical" ? "MEDIUM-HIGH" : "MEDIUM",
-        score: anomaly.severity === "critical" ? 74 : 52,
-        reason: `Repeated ${param.toLowerCase()} anomalies detected for ${anomaly.station} in the last 24 hours.`
-      },
-      shapContributions: anomaly.shapContributions || ANOMALY_DETAIL.shapContributions
-    });
+      setSelectedAnomaly({
+        ...ANOMALY_DETAIL,
+        id: anomaly.id || ANOMALY_DETAIL.id,
+        station: anomaly.station || ANOMALY_DETAIL.station,
+        stationName: anomaly.stationName ? (anomaly.stationName.includes("India") ? anomaly.stationName : `${anomaly.stationName}, India`) : ANOMALY_DETAIL.stationName,
+        parameter: param,
+        severity: anomaly.severity || ANOMALY_DETAIL.severity,
+        confidence: anomaly.confidence || ANOMALY_DETAIL.confidence,
+        observed: obsVal,
+        expected: expVal,
+        correction: expVal,
+        probableRootCause: anomaly.rootCause || anomaly.probableRootCause || `${anomaly.rootCause || "Sensor Spike"} / Possible Sensor Malfunction`,
+        aiAssessment: anomaly.aiAssessment || `${param} shifted from expected ${expVal}${unit} to observed ${obsVal}${unit} at ${anomaly.station}. The magnitude and rate of change are inconsistent with recent temporal baselines.`,
+        recommendedAction: anomaly.recommendedAction || `Inspect ${param.toLowerCase()} sensor hardware and verify calibration against station baseline.`,
+        maintenanceRisk: anomaly.maintenanceRisk || {
+          level: anomaly.severity === "critical" ? "MEDIUM-HIGH" : "MEDIUM",
+          score: anomaly.severity === "critical" ? 74 : 52,
+          reason: `Repeated ${param.toLowerCase()} anomalies detected for ${anomaly.station} in the last 24 hours.`
+        },
+        shapContributions: anomaly.shapContributions || ANOMALY_DETAIL.shapContributions
+      });
+    }
     setPanelOpen(true);
   };
 
+  // Open diagnostics for the currently selected station from StationInspector
   const openStationDetail = (station) => {
     if (!station) return;
     const existingAnomaly = anomalyList.find((a) => a.station === station.id);
@@ -157,16 +221,60 @@ export default function Dashboard() {
     }
   };
 
+  // Interactive Anomaly Simulation
+  const handleSimulateAnomaly = async () => {
+    setIsSimulating(true);
+    try {
+      const res = await triggerSimulateAnomaly(selectedStationId || "AWS-DEL-01", "spike");
+      if (res?.detail) {
+        const detail = res.detail;
+        const newEntry = {
+          id: detail.id || `AN-${Math.floor(Math.random() * 90000) + 10000}`,
+          time: formatClock(new Date()),
+          station: detail.station,
+          stationName: detail.stationName || "Delhi",
+          parameter: detail.parameter || "Temperature",
+          observed: `${detail.observed}°C`,
+          expected: `${detail.expected}°C`,
+          severity: detail.severity || "critical",
+          confidence: detail.confidence || 98.5,
+          rootCause: detail.probableRootCause || "Sensor Spike",
+        };
+        setAnomalyList((prev) => [newEntry, ...prev].slice(0, 15));
+        setActiveAnomalies((n) => n + 1);
+        setStations((prev) =>
+          prev.map((s) => (s.id === detail.station ? { ...s, status: "anomaly", health: Math.max(25, s.health - 8) } : s))
+        );
+
+        // Refresh series to display newly injected spike
+        const updatedSeries = await getStationSeries(selectedStationId);
+        if (updatedSeries && updatedSeries.length > 0) {
+          setStationSeries(updatedSeries);
+        }
+
+        const id = ++toastIdRef.current;
+        setToasts((prev) => [...prev, { id, station: detail.station, parameter: detail.parameter, confidence: detail.confidence }]);
+        setTimeout(() => {
+          setToasts((prev) => prev.filter((t) => t.id !== id));
+        }, 5000);
+      }
+    } catch (err) {
+      console.error("Simulation error:", err);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
   const kpis = useMemo(
     () => [
       {
         label: "Stations Online",
-        value: `${NETWORK_STATS.stationsOnline}`,
+        value: `${stationsOnline}`,
         suffix: `/ ${NETWORK_STATS.stationsTotal}`,
         trend: "+2 this week",
         trendDirection: "up",
         status: "good",
-        sparkline: KPI_SPARKLINES.stationsOnline,
+        sparkline: sparklines.stationsOnline,
       },
       {
         label: "Observations",
@@ -174,7 +282,7 @@ export default function Dashboard() {
         trend: "live",
         trendDirection: "up",
         status: "info",
-        sparkline: KPI_SPARKLINES.observations,
+        sparkline: sparklines.observations,
       },
       {
         label: "Active Anomalies",
@@ -182,57 +290,48 @@ export default function Dashboard() {
         trend: "+3 vs yesterday",
         trendDirection: "down",
         status: "warn",
-        sparkline: KPI_SPARKLINES.activeAnomalies,
+        sparkline: sparklines.activeAnomalies,
       },
       {
         label: "Network Health",
-        value: `${NETWORK_STATS.networkHealth}%`,
+        value: `${networkHealth}%`,
         trend: "-0.4% vs 1h",
         trendDirection: "down",
         status: "good",
-        sparkline: KPI_SPARKLINES.networkHealth,
+        sparkline: sparklines.networkHealth,
       },
     ],
-    [observations, activeAnomalies]
+    [observations, activeAnomalies, stationsOnline, networkHealth, sparklines]
   );
 
-  const currentSeries = useMemo(() => {
-    if (!selectedStation) return SENSOR_SERIES;
-    const isDelhiAnomaly = selectedStation.id === "AWS-DEL-01";
-    const baseTemp = selectedStation.temp;
-    const basePressure = selectedStation.pressure;
-    const baseHumidity = selectedStation.humidity;
+  const seriesToUse = stationSeries && stationSeries.length > 0 ? stationSeries : SENSOR_SERIES;
+  const tempCurrent = seriesToUse[seriesToUse.length - 1]?.temp ?? 24.6;
+  const tempMin = Math.min(...seriesToUse.map((d) => d.temp));
+  const tempMax = Math.max(...seriesToUse.map((d) => d.temp));
+  const pressureCurrent = seriesToUse[seriesToUse.length - 1]?.pressure ?? 1012.4;
+  const pressureMin = Math.min(...seriesToUse.map((d) => d.pressure));
+  const pressureMax = Math.max(...seriesToUse.map((d) => d.pressure));
+  const humidityCurrent = seriesToUse[seriesToUse.length - 1]?.humidity ?? 68.0;
+  const humidityMin = Math.min(...seriesToUse.map((d) => d.humidity));
+  const humidityMax = Math.max(...seriesToUse.map((d) => d.humidity));
 
-    return SENSOR_SERIES.map((pt) => {
-      const isAnomalyPoint = isDelhiAnomaly && pt.anomaly;
-      const tDiff = pt.temp - 24.7;
-      const pDiff = pt.pressure - 1012.6;
-      const hDiff = pt.humidity - 67;
-      return {
-        ...pt,
-        temp: isAnomalyPoint ? 55.0 : Number((baseTemp + tDiff * 0.4).toFixed(1)),
-        pressure: Number((basePressure + pDiff * 0.5).toFixed(1)),
-        humidity: Math.max(10, Math.min(100, Number((baseHumidity + hDiff * 0.4).toFixed(1)))),
-        anomaly: isAnomalyPoint,
-      };
-    });
-  }, [selectedStation]);
-
-  const tempCurrent = currentSeries[currentSeries.length - 1].temp;
-  const tempMin = Math.min(...currentSeries.map((d) => d.temp));
-  const tempMax = Math.max(...currentSeries.map((d) => d.temp));
-  const pressureCurrent = currentSeries[currentSeries.length - 1].pressure;
-  const pressureMin = Math.min(...currentSeries.map((d) => d.pressure));
-  const pressureMax = Math.max(...currentSeries.map((d) => d.pressure));
-  const humidityCurrent = currentSeries[currentSeries.length - 1].humidity;
-  const humidityMin = Math.min(...currentSeries.map((d) => d.humidity));
-  const humidityMax = Math.max(...currentSeries.map((d) => d.humidity));
+  // Focus Styling Helper for Sections
+  const getSectionClass = (sectionKey) => {
+    const base = "rounded-xl border transition-all duration-500 p-4 scroll-mt-24";
+    if (!focusedSection) {
+      return `${base} border-transparent bg-transparent`;
+    }
+    if (focusedSection === sectionKey) {
+      return `${base} border-atmos-400/60 bg-base-900/90 shadow-[0_0_40px_rgba(75,188,220,0.18)] ring-2 ring-atmos-400/40 opacity-100 scale-[1.008]`;
+    }
+    return `${base} border-line/20 bg-base-950/40 opacity-25 blur-[1.5px] pointer-events-none`;
+  };
 
   return (
     <div className="flex min-h-screen bg-base-950">
       <Sidebar
         active={navActive}
-        onSelect={setNavActive}
+        onSelect={handleNavSelect}
         mobileOpen={mobileSidebar}
         onCloseMobile={() => setMobileSidebar(false)}
       />
@@ -255,6 +354,17 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4 text-[12px] text-ink-dim">
+            {/* Live Interactive Trigger Button */}
+            <button
+              onClick={handleSimulateAnomaly}
+              disabled={isSimulating}
+              className="flex items-center gap-1.5 rounded-full border border-signal-warn/30 bg-signal-warn/10 px-3 py-1 text-signal-warn transition-all hover:bg-signal-warn/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-signal-warn disabled:opacity-50"
+              title="Inject test anomaly via ML & LangGraph engine"
+            >
+              <Zap size={13} className={isSimulating ? "animate-spin text-signal-bad" : ""} />
+              {isSimulating ? "Analyzing ML..." : "Inject Test Anomaly"}
+            </button>
+
             <div className="flex items-center gap-1.5 rounded-full border border-signal-good/25 bg-signal-good/10 px-2.5 py-1 text-signal-good">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal-good opacity-60" />
@@ -267,42 +377,139 @@ export default function Dashboard() {
         </header>
 
         <main className="flex-1 space-y-6 px-6 py-6">
-          {/* KPI cards */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-[104px] rounded-lg border border-line bg-base-900/60 p-5">
-                    <div className="skeleton h-3 w-24 rounded" />
-                    <div className="skeleton mt-4 h-6 w-16 rounded" />
-                  </div>
-                ))
-              : kpis.map((k) => <KPICard key={k.label} {...k} />)}
-          </div>
-
-          {/* Map + Inspector */}
-          <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-[14px] font-semibold text-white">AWS Network</h2>
-                <span className="text-[12px] text-ink-faint">{stations.length} stations shown</span>
-              </div>
-              <NetworkMap stations={stations} selectedId={selectedStationId} onSelect={setSelectedStationId} />
+          {/* Active Focus Pill when an option is chosen */}
+          {focusedSection && (
+            <div className="sticky top-20 z-20 mx-auto -mt-2 mb-2 flex w-fit items-center gap-3 rounded-full border border-atmos-400/40 bg-base-900/95 px-4 py-1.5 shadow-2xl backdrop-blur-md animate-toast-in text-[12px] text-ink">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-atmos-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-atmos-400" />
+              </span>
+              <span>
+                Focusing on:{" "}
+                <strong className="text-white capitalize">
+                  {focusedSection === "overview"
+                    ? "Overview (KPIs)"
+                    : focusedSection === "stations"
+                    ? "AWS Stations & Network"
+                    : focusedSection === "monitoring"
+                    ? "Live Sensor Monitoring"
+                    : focusedSection === "anomalies"
+                    ? "Recent Anomalies"
+                    : "AI Analytics & Diagnostics"}
+                </strong>
+              </span>
+              <button
+                onClick={handleClearFocus}
+                className="ml-2 rounded-full bg-atmos-400/15 border border-atmos-400/30 px-2.5 py-0.5 text-[11px] font-medium text-atmos-300 hover:bg-atmos-400/25 hover:text-white transition-all"
+              >
+                Show All Sections ✕
+              </button>
             </div>
-            <div>
-              <h2 className="mb-3 text-[14px] font-semibold text-white">Station Inspector</h2>
-              <div className="h-[460px] lg:h-[520px]">
-                <StationInspector station={selectedStation} onViewDetails={() => openStationDetail(selectedStation)} />
+          )}
+
+          {/* Section 1: Overview */}
+          <section
+            id="section-overview"
+            className={getSectionClass("overview")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "overview") handleNavSelect("overview");
+            }}
+          >
+            {focusedSection === "overview" && (
+              <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
+                  Overview & Network KPI Metrics
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              </div>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {loading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-[104px] rounded-lg border border-line bg-base-900/60 p-5">
+                      <div className="skeleton h-3 w-24 rounded" />
+                      <div className="skeleton mt-4 h-6 w-16 rounded" />
+                    </div>
+                  ))
+                : kpis.map((k) => <KPICard key={k.label} {...k} />)}
+            </div>
+          </section>
+
+          {/* Section 2: Stations */}
+          <section
+            id="section-stations"
+            className={getSectionClass("stations")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "stations") handleNavSelect("stations");
+            }}
+          >
+            {focusedSection === "stations" && (
+              <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
+                  AWS Network Observation & Station Inspector
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              </div>
+            )}
+            <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-[14px] font-semibold text-white">AWS Network</h2>
+                  <span className="text-[12px] text-ink-faint">{stations.length} stations shown</span>
+                </div>
+                <NetworkMap stations={stations} selectedId={selectedStationId} onSelect={setSelectedStationId} />
+              </div>
+              <div>
+                <h2 className="mb-3 text-[14px] font-semibold text-white">Station Inspector</h2>
+                <div className="h-[460px] lg:h-[520px]">
+                  <StationInspector station={selectedStation} onViewDetails={() => openStationDetail(selectedStation)} />
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Sensor charts */}
-          <div>
-            <h2 className="mb-3 text-[14px] font-semibold text-white">Live Sensor Charts — {selectedStation?.id ?? "AWS-DEL-01"}</h2>
+          {/* Section 3: Live Monitoring */}
+          <section
+            id="section-monitoring"
+            className={getSectionClass("monitoring")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "monitoring") handleNavSelect("monitoring");
+            }}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[14px] font-semibold text-white">Live Sensor Charts — {selectedStation?.id ?? "AWS-DEL-01"}</h2>
+              {focusedSection === "monitoring" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              )}
+            </div>
             <div className="grid gap-4 lg:grid-cols-3">
               <SensorChart
                 title="Temperature"
-                data={currentSeries}
+                data={seriesToUse}
                 dataKey="temp"
                 unit="°C"
                 color="#4bbcdc"
@@ -312,7 +519,7 @@ export default function Dashboard() {
               />
               <SensorChart
                 title="Atmospheric Pressure"
-                data={currentSeries}
+                data={seriesToUse}
                 dataKey="pressure"
                 unit=" hPa"
                 color="#7ad4ec"
@@ -322,7 +529,7 @@ export default function Dashboard() {
               />
               <SensorChart
                 title="Relative Humidity"
-                data={currentSeries}
+                data={seriesToUse}
                 dataKey="humidity"
                 unit="%"
                 color="#5fd3f0"
@@ -331,16 +538,81 @@ export default function Dashboard() {
                 current={humidityCurrent}
               />
             </div>
-          </div>
+          </section>
 
-          {/* Anomaly table */}
-          <div>
+          {/* Section 4: Recent Anomalies */}
+          <section
+            id="section-anomalies"
+            className={getSectionClass("anomalies")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "anomalies") handleNavSelect("anomalies");
+            }}
+          >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[14px] font-semibold text-white">Recent Anomalies</h2>
-              <span className="text-[12px] text-ink-faint">Click a row for full explainability</span>
+              <div>
+                <h2 className="text-[14px] font-semibold text-white">Recent Anomalies</h2>
+                <span className="text-[12px] text-ink-faint">Click a row for full explainability</span>
+              </div>
+              {focusedSection === "anomalies" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              )}
             </div>
             <AnomalyTable anomalies={anomalyList} onSelect={openAnomalyDetail} />
-          </div>
+          </section>
+
+          {/* Section 5: AI Analytics & Diagnostics */}
+          <section
+            id="section-analytics"
+            className={getSectionClass("analytics")}
+            onClick={() => {
+              if (focusedSection && focusedSection !== "analytics") handleNavSelect("analytics");
+            }}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-[14px] font-semibold text-white">AI Analytics & Root Cause Explainability</h2>
+                <span className="text-[12px] text-ink-faint">SHAP feature attributions, model diagnostics & maintenance risk</span>
+              </div>
+              {focusedSection === "analytics" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClearFocus();
+                  }}
+                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                >
+                  Show All ✕
+                </button>
+              )}
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <AIInsight
+                assessment={
+                  selectedAnomaly?.aiAssessment ||
+                  ANOMALY_DETAIL.aiAssessment ||
+                  "Automated sensor telemetry evaluation detected potential deviation in environmental readings."
+                }
+                rootCause={selectedAnomaly?.probableRootCause || ANOMALY_DETAIL.probableRootCause || "Sensor Drift"}
+                action={selectedAnomaly?.recommendedAction || ANOMALY_DETAIL.recommendedAction || "Verify station calibration."}
+              />
+              <ShapChart
+                contributions={selectedAnomaly?.shapContributions || SHAP_CONTRIBUTIONS}
+              />
+              <MaintenanceRisk
+                level={selectedAnomaly?.maintenanceRisk?.level || ANOMALY_DETAIL.maintenanceRisk?.level || "MEDIUM-HIGH"}
+                score={selectedAnomaly?.maintenanceRisk?.score || ANOMALY_DETAIL.maintenanceRisk?.score || 78}
+                reason={selectedAnomaly?.maintenanceRisk?.reason || ANOMALY_DETAIL.maintenanceRisk?.reason || "Repeated anomalies flagged in recent observation cycles."}
+              />
+            </div>
+          </section>
         </main>
       </div>
 

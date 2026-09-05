@@ -25,12 +25,19 @@ share/python-wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
+# Virtual environments & Secrets
 venv/
 .venv/
 env/
-.env/
+.env
+.env.*
+*.env
 ENV/
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
 
 # IDEs and editors
 .idea/

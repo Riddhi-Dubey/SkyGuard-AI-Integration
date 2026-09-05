@@ -3,7 +3,14 @@ import pandas as pd
 import numpy as np
 import joblib
 from sklearn.ensemble import IsolationForest
-from ml.src.data_preprocessing import WeatherDataPreprocessor
+
+try:
+    from ml.src.data_preprocessing import WeatherDataPreprocessor
+except ImportError:
+    try:
+        from src.data_preprocessing import WeatherDataPreprocessor
+    except ImportError:
+        from data_preprocessing import WeatherDataPreprocessor
 
 def train_pipeline(data_path, contamination_list=[0.01, 0.02, 0.05], default_contamination=0.02, random_state=42):
     print("=== Training Pipeline Starting ===")
@@ -71,5 +78,17 @@ def train_pipeline(data_path, contamination_list=[0.01, 0.02, 0.05], default_con
     print("=== Training Pipeline Completed Successfully ===\n")
 
 if __name__ == "__main__":
-    csv_data_path = r"c:\Users\Lenovo\OneDrive\Documents\somil personal\ml\data\weather_data.csv"
+    candidates = [
+        "data/weather_data.csv",
+        "ml/data/weather_data.csv",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "weather_data.csv"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ml", "data", "weather_data.csv"),
+    ]
+    csv_data_path = None
+    for p in candidates:
+        if os.path.exists(p):
+            csv_data_path = p
+            break
+    if not csv_data_path:
+        csv_data_path = "data/weather_data.csv"
     train_pipeline(csv_data_path)

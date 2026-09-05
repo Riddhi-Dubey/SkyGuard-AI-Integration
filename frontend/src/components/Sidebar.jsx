@@ -11,9 +11,9 @@ import {
 
 const NAV = [
   { id: "overview", label: "Overview", icon: LayoutGrid },
+  { id: "stations", label: "Stations", icon: MapPin },
   { id: "monitoring", label: "Live Monitoring", icon: Radio },
   { id: "anomalies", label: "Anomalies", icon: AlertTriangle },
-  { id: "stations", label: "Stations", icon: MapPin },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
 ];
 

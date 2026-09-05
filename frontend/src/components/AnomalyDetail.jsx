@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { X, ShieldCheck, CheckCircle2 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import ShapChart from "./ShapChart";
@@ -14,6 +14,9 @@ export default function AnomalyDetail({ detail, open, onClose }) {
   }, [open]);
 
   if (!detail) return null;
+
+  const unit = detail.parameter === "Pressure" ? " hPa" : detail.parameter === "Humidity" ? "%" : "°C";
+  const shapData = detail.shapContributions && detail.shapContributions.length > 0 ? detail.shapContributions : SHAP_CONTRIBUTIONS;
 
   return (
     <div
@@ -62,19 +65,19 @@ export default function AnomalyDetail({ detail, open, onClose }) {
               <div className="rounded-lg border border-signal-bad/30 bg-signal-bad/5 p-4">
                 <div className="text-[11px] text-ink-faint">Observed {detail.parameter}</div>
                 <div className="mt-1 font-mono-num text-xl font-semibold text-signal-bad">
-                  {detail.observed}°C
+                  {detail.observed}{unit}
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-base-900/60 p-4">
                 <div className="text-[11px] text-ink-faint">Expected</div>
                 <div className="mt-1 font-mono-num text-xl font-semibold text-white">
-                  {detail.expected}°C
+                  {detail.expected}{unit}
                 </div>
               </div>
               <div className="rounded-lg border border-signal-good/30 bg-signal-good/5 p-4">
                 <div className="text-[11px] text-ink-faint">Suggested Correction</div>
                 <div className="mt-1 font-mono-num text-xl font-semibold text-signal-good">
-                  {detail.correction}°C
+                  {detail.correction}{unit}
                 </div>
               </div>
             </div>
@@ -84,7 +87,7 @@ export default function AnomalyDetail({ detail, open, onClose }) {
             </div>
           </div>
 
-          <ShapChart contributions={SHAP_CONTRIBUTIONS} />
+          <ShapChart contributions={shapData} />
 
           <AIInsight
             assessment={detail.aiAssessment}
@@ -98,11 +101,11 @@ export default function AnomalyDetail({ detail, open, onClose }) {
             <div className="mt-4 grid grid-cols-2 gap-4 text-[13px]">
               <div>
                 <div className="text-[11px] text-ink-faint">Observed</div>
-                <div className="mt-1 font-mono-num font-semibold text-white">{detail.observed}°C</div>
+                <div className="mt-1 font-mono-num font-semibold text-white">{detail.observed}{unit}</div>
               </div>
               <div>
                 <div className="text-[11px] text-ink-faint">Estimated</div>
-                <div className="mt-1 font-mono-num font-semibold text-signal-good">{detail.correction}°C</div>
+                <div className="mt-1 font-mono-num font-semibold text-signal-good">{detail.correction}{unit}</div>
               </div>
               <div className="col-span-2">
                 <div className="text-[11px] text-ink-faint">Method</div>
@@ -137,9 +140,9 @@ export default function AnomalyDetail({ detail, open, onClose }) {
           </div>
 
           <MaintenanceRisk
-            level={detail.maintenanceRisk.level}
-            score={detail.maintenanceRisk.score}
-            reason={detail.maintenanceRisk.reason}
+            level={detail.maintenanceRisk?.level || "MEDIUM"}
+            score={detail.maintenanceRisk?.score || 50}
+            reason={detail.maintenanceRisk?.reason || "Station health monitoring"}
           />
         </div>
       </div>
