@@ -189,6 +189,34 @@ export function getStationDetailData(stationId, stationOverride = null) {
   const station = stationOverride || STATIONS.find((s) => s.id === stationId) || STATIONS[0];
   
   if (station.id === "AWS-DEL-01") {
+    const isDelhiSpike = station.status === "anomaly" || station.temp > 40;
+    if (!isDelhiSpike) {
+      return {
+        id: "STN-DEL-01",
+        station: "AWS-DEL-01",
+        stationName: "Delhi, India",
+        parameter: "Temperature",
+        observed: station.temp ?? 24.6,
+        expected: station.temp ?? 24.6,
+        correction: "No correction",
+        severity: "normal",
+        confidence: 99.2,
+        correctionMethod: "Nominal telemetry — within baseline",
+        correctionConfidence: 99.0,
+        probableRootCause: "Nominal Sensor Operation / No Fault Detected",
+        aiAssessment: `Telemetry for station AWS-DEL-01 (Delhi) is operating within nominal meteorological baselines. Ambient temperature is ${station.temp ?? 24.6}°C, atmospheric pressure is 1012.4 hPa, and relative humidity is 68%. All sensors pass physical consistency checks.`,
+        recommendedAction: "No action required. Station health is verified nominal.",
+        maintenanceRisk: { level: "LOW", score: 10, reason: "0 critical anomalies recorded in the last 24 hours." },
+        shapContributions: [
+          { feature: "Temperature", value: 0.10 },
+          { feature: "Pressure", value: 0.08 },
+          { feature: "Humidity", value: 0.06 },
+          { feature: "Temperature Delta", value: 0.02 },
+          { feature: "Rolling Temperature Std", value: 0.01 },
+        ]
+      };
+    }
+
     return {
       ...ANOMALY_DETAIL,
       id: "AN-10231",
