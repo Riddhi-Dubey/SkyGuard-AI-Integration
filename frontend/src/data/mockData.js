@@ -377,18 +377,18 @@ export function buildSeries(baseDate = new Date("2026-08-30T10:42:18"), station 
 export const SENSOR_SERIES = buildSeries();
 
 export const NETWORK_STATS = {
-  stationsOnline: 47,
-  stationsTotal: 50,
+  stationsOnline: STATIONS.filter((s) => s.status !== "offline").length,
+  stationsTotal: STATIONS.length,
   observations: 1284920,
   dataQuality: 99.2,
-  activeAnomalies: 7,
+  activeAnomalies: STATIONS.filter((s) => s.status === "anomaly" || s.status === "warning").length,
   networkHealth: 96.4,
 };
 
 export const KPI_SPARKLINES = {
-  stationsOnline: [44, 45, 45, 46, 46, 47, 47, 46, 47, 47],
+  stationsOnline: [11, 11, 12, 11, 12, 12, 12, 11, 12, 12],
   observations: [11, 14, 13, 17, 16, 19, 18, 21, 20, 23],
-  activeAnomalies: [3, 4, 4, 5, 5, 6, 6, 7, 6, 7],
+  activeAnomalies: [1, 2, 2, 2, 1, 2, 2, 2, 1, 2],
   networkHealth: [97.8, 97.5, 97.1, 96.9, 96.6, 96.8, 96.5, 96.2, 96.6, 96.4],
 };
 

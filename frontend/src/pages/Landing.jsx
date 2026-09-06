@@ -65,7 +65,7 @@ export default function Landing() {
 
             <div className="mt-12 grid max-w-md grid-cols-3 gap-6 border-t border-slate-200 pt-6">
               <div>
-                <div className="font-mono-num text-2xl font-bold text-slate-900">50 Nodes</div>
+                <div className="font-mono-num text-2xl font-bold text-slate-900">{NETWORK_STATS.stationsTotal} Nodes</div>
                 <div className="mt-1 text-[11px] font-semibold text-slate-400">National AWS Grid</div>
               </div>
               <div>
@@ -205,7 +205,7 @@ export default function Landing() {
                 National Synoptic Overview
               </span>
               <h2 className="mt-3 max-w-lg text-3xl font-extrabold tracking-tight text-slate-900">
-                Continuous surveillance of all 50 AWS observation nodes.
+                Continuous surveillance of all {NETWORK_STATS.stationsTotal} AWS observation nodes.
               </h2>
             </div>
             <Button as={Link} to="/dashboard" icon>

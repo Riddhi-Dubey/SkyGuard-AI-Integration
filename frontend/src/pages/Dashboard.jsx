@@ -241,13 +241,17 @@ export default function Dashboard() {
     }
   };
 
+  const totalStationsCount = stations.length || NETWORK_STATS.stationsTotal;
+  const currentOnlineCount = stationsOnline ?? stations.filter((s) => s.status !== "offline").length;
+  const coveragePercent = Math.round((currentOnlineCount / Math.max(1, totalStationsCount)) * 100);
+
   const kpis = useMemo(
     () => [
       {
         label: "AWS Stations Online",
-        value: `${stationsOnline}`,
-        suffix: `/ ${NETWORK_STATS.stationsTotal} Synoptic Nodes`,
-        trend: "94.0% National Grid Coverage",
+        value: `${currentOnlineCount}`,
+        suffix: `/ ${totalStationsCount} Synoptic Nodes`,
+        trend: `${coveragePercent}% Active Grid Coverage`,
         trendDirection: "up",
         status: "good",
         sparkline: sparklines.stationsOnline,
@@ -263,21 +267,22 @@ export default function Dashboard() {
       {
         label: "Flagged Sensor Anomalies",
         value: `${activeAnomalies}`,
-        trend: "Spikes & Louver Heating",
-        trendDirection: "down",
-        status: "warn",
+        suffix: "Active Faults",
+        trend: activeAnomalies > 0 ? "QC Flags Raised" : "All Nominal",
+        trendDirection: activeAnomalies > 0 ? "down" : "up",
+        status: activeAnomalies > 0 ? "bad" : "good",
         sparkline: sparklines.activeAnomalies,
       },
       {
-        label: "WMO Data Quality Index",
+        label: "WMO QC Compliance",
         value: `${networkHealth}%`,
-        trend: "WMO-No. 8 QC Compliance",
+        trend: "WMO-No. 8 Validated",
         trendDirection: "up",
         status: "good",
         sparkline: sparklines.networkHealth,
       },
     ],
-    [observations, activeAnomalies, stationsOnline, networkHealth, sparklines]
+    [observations, activeAnomalies, currentOnlineCount, totalStationsCount, coveragePercent, networkHealth, sparklines]
   );
 
   // Synchronize 60-minute sensor series to live clock and selected station
