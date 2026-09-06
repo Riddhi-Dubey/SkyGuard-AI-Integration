@@ -4,9 +4,9 @@ import "leaflet/dist/leaflet.css";
 import { Plus, Minus, RotateCcw, Layers, MapPin } from "lucide-react";
 
 const STATUS_COLOR = {
-  healthy: "#3ddc8b",
-  warning: "#f2b84b",
-  anomaly: "#f0555a",
+  healthy: "#16a34a",
+  warning: "#d97706",
+  anomaly: "#dc2626",
 };
 
 // Fallback accurate GPS coordinates for all Indian AWS stations
@@ -71,7 +71,7 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
   const tileLayerRef = useRef(null);
   const markersRef = useRef({});
   const polylineGroupRef = useRef(null);
-  const [mapType, setMapType] = useState("dark");
+  const [mapType, setMapType] = useState("standard");
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
   // Initialize Map
@@ -151,10 +151,10 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
         const pB = stationMap.get(idB);
         if (pA && pB) {
           L.polyline([pA, pB], {
-            color: "#4bbcdc",
-            weight: 1.2,
-            opacity: 0.28,
-            dashArray: "3, 6",
+            color: "#0284c7",
+            weight: 1.5,
+            opacity: 0.35,
+            dashArray: "4, 6",
             interactive: false,
           }).addTo(polylineGroupRef.current);
         }
@@ -172,29 +172,24 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
       if (!lat || !lng) return;
 
       const isSelected = s.id === selectedId;
-      const color = STATUS_COLOR[s.status] || "#3ddc8b";
+      const color = STATUS_COLOR[s.status] || "#16a34a";
 
       // Custom pulsing HTML marker element
       const markerHtml = `
         <div class="relative flex items-center justify-center -translate-x-1/2 -translate-y-1/2 group cursor-pointer" style="width: 36px; height: 36px;">
           ${
-            s.status !== "healthy"
-              ? `<span class="absolute inline-flex h-8 w-8 rounded-full animate-ping opacity-60" style="background-color: ${color};"></span>`
-              : ""
-          }
-          ${
             isSelected
-              ? `<span class="absolute inline-flex h-9 w-9 rounded-full ring-2 ring-atmos-400 bg-atmos-400/20 shadow-[0_0_15px_#4bbcdc]"></span>`
+              ? `<div class="absolute inset-0 rounded-full animate-ping opacity-35" style="background-color: ${color}"></div>`
               : ""
           }
-          <div class="relative flex items-center justify-center rounded-full border border-white/80 shadow-md transition-transform duration-200 group-hover:scale-125"
-               style="width: ${isSelected ? "16px" : "12px"}; height: ${isSelected ? "16px" : "12px"}; background-color: ${color};">
+          <div class="relative flex items-center justify-center rounded-full border-2 border-white shadow-md transition-transform duration-200 group-hover:scale-125"
+               style="width: ${isSelected ? "18px" : "13px"}; height: ${isSelected ? "18px" : "13px"}; background-color: ${color};">
             <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
           </div>
           ${
             isSelected
-              ? `<div class="absolute -top-7 whitespace-nowrap rounded border border-line-strong bg-base-900/95 px-2 py-0.5 text-[10px] font-semibold text-white shadow-xl pointer-events-none">
-                   ${s.name} (${s.id})
+              ? `<div class="absolute -top-7 whitespace-nowrap rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-900 shadow-md pointer-events-none">
+                   ${s.conditionIcon || "🌤️"} ${s.name}
                  </div>`
               : ""
           }
@@ -212,21 +207,19 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
 
       // Interactive popup
       marker.bindTooltip(
-        `<div class="p-1 text-left font-sans">
-          <div class="text-[12px] font-semibold text-white">${s.name} <span class="text-ink-faint">(${s.id})</span></div>
-          <div class="text-[11px] text-ink-dim">${s.state || "India"}</div>
-          <div class="mt-1.5 flex items-center gap-2 text-[11px] font-mono-num">
-            <span class="text-white">${s.temp}°C</span>
-            <span class="text-ink-faint">·</span>
-            <span class="text-white">${s.humidity}% RH</span>
-            <span class="text-ink-faint">·</span>
-            <span class="uppercase font-semibold" style="color: ${color}">${s.status}</span>
+        `<div class="p-1.5 text-left font-sans text-slate-800">
+          <div class="text-[13px] font-bold text-slate-900">${s.conditionIcon || "🌤️"} ${s.name} <span class="text-slate-500 font-normal">(${s.id})</span></div>
+          <div class="text-[11px] text-slate-500">${s.state || "India"} · ${s.condition || "Operational"}</div>
+          <div class="mt-2 flex items-center gap-2 text-[12px] font-mono-num font-semibold">
+            <span class="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">${s.temp}°C</span>
+            <span class="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">${s.humidity}% RH</span>
+            <span class="uppercase text-[10px] px-1.5 py-0.5 rounded font-bold" style="background-color: ${color}15; color: ${color}; border: 1px solid ${color}40">${s.status}</span>
           </div>
         </div>`,
         {
           direction: "top",
           offset: [0, -12],
-          className: "leaflet-dark-tooltip",
+          className: "leaflet-light-tooltip",
         }
       );
 
@@ -273,19 +266,19 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
   };
 
   return (
-    <div className="relative h-[460px] overflow-hidden rounded-lg border border-line bg-base-950 isolate lg:h-[520px]">
+    <div className="relative h-[460px] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm isolate lg:h-[520px]">
       {/* Leaflet Map DOM Container */}
       <div ref={mapContainerRef} className="h-full w-full z-0" />
 
       {/* Top Bar: Legend and Station counter */}
       <div className="absolute left-3 top-3 z-10 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-3 rounded-md border border-line bg-base-900/90 px-3 py-1.5 text-[11px] text-ink-dim backdrop-blur-md shadow-lg">
+        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-[11px] text-slate-700 shadow-md backdrop-blur-md">
           <LegendDot color={STATUS_COLOR.healthy} label="Healthy" />
           <LegendDot color={STATUS_COLOR.warning} label="Warning" />
           <LegendDot color={STATUS_COLOR.anomaly} label="Anomaly" />
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-line bg-base-900/90 px-2.5 py-1.5 text-[11px] text-atmos-300 backdrop-blur-md shadow-lg font-mono-num">
-          <MapPin size={12} />
+        <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white/95 px-2.5 py-1.5 text-[11px] text-sky-700 shadow-md backdrop-blur-md font-semibold">
+          <MapPin size={13} className="text-sky-600" />
           <span>India AWS Observation Grid</span>
         </div>
       </div>
@@ -295,15 +288,15 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
         <div className="relative">
           <button
             onClick={() => setShowLayerMenu((prev) => !prev)}
-            className="flex items-center gap-1.5 rounded-md border border-line bg-base-900/90 px-2.5 py-1.5 text-[11px] font-medium text-ink-dim transition-colors hover:bg-base-800 hover:text-white backdrop-blur-md shadow-lg"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-md transition-colors hover:bg-slate-50 backdrop-blur-md"
             aria-label="Switch map style"
           >
-            <Layers size={13} />
+            <Layers size={13} className="text-sky-600" />
             <span className="capitalize">{TILE_LAYERS[mapType].name}</span>
           </button>
 
           {showLayerMenu && (
-            <div className="absolute right-0 mt-1 w-36 rounded-md border border-line bg-base-900 p-1 shadow-2xl backdrop-blur-md animate-toast-in">
+            <div className="absolute right-0 mt-1.5 w-36 rounded-lg border border-slate-200 bg-white p-1 shadow-xl animate-toast-in">
               {Object.entries(TILE_LAYERS).map(([key, config]) => (
                 <button
                   key={key}
@@ -311,14 +304,14 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
                     setMapType(key);
                     setShowLayerMenu(false);
                   }}
-                  className={`flex w-full items-center justify-between rounded px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                  className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
                     mapType === key
-                      ? "bg-atmos-400/15 text-atmos-300"
-                      : "text-ink-dim hover:bg-base-800 hover:text-white"
+                      ? "bg-sky-50 text-sky-700 font-semibold"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   {config.name}
-                  {mapType === key && <span className="h-1.5 w-1.5 rounded-full bg-atmos-400" />}
+                  {mapType === key && <span className="h-1.5 w-1.5 rounded-full bg-sky-600" />}
                 </button>
               ))}
             </div>
@@ -327,10 +320,10 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
       </div>
 
       {/* Bottom Right: Zoom & Reset Controls */}
-      <div className="absolute bottom-3 right-3 z-10 flex flex-col gap-1 rounded-md border border-line bg-base-900/90 p-1 backdrop-blur-md shadow-lg">
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col gap-1 rounded-lg border border-slate-200 bg-white/95 p-1 shadow-md backdrop-blur-md">
         <button
           onClick={handleZoomIn}
-          className="rounded p-1.5 text-ink-dim transition-colors hover:bg-base-800 hover:text-white"
+          className="rounded p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           aria-label="Zoom in"
           title="Zoom In"
         >
@@ -338,7 +331,7 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
         </button>
         <button
           onClick={handleZoomOut}
-          className="rounded p-1.5 text-ink-dim transition-colors hover:bg-base-800 hover:text-white"
+          className="rounded p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           aria-label="Zoom out"
           title="Zoom Out"
         >
@@ -346,7 +339,7 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
         </button>
         <button
           onClick={handleResetView}
-          className="rounded p-1.5 text-ink-dim transition-colors hover:bg-base-800 hover:text-white"
+          className="rounded p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           aria-label="Reset zoom and center on India"
           title="Reset to full India view"
         >
@@ -356,19 +349,19 @@ export default function NetworkMap({ stations = [], selectedId, onSelect }) {
 
       {/* Custom Tooltip Styling in CSS */}
       <style>{`
-        .leaflet-dark-tooltip {
-          background-color: rgba(15, 20, 31, 0.95) !important;
-          border: 1px solid rgba(46, 56, 73, 0.9) !important;
-          border-radius: 6px !important;
-          color: #f1f5f9 !important;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
-          padding: 6px 10px !important;
+        .leaflet-light-tooltip {
+          background-color: rgba(255, 255, 255, 0.98) !important;
+          border: 1px solid #cbd5e1 !important;
+          border-radius: 8px !important;
+          color: #0f172a !important;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12) !important;
+          padding: 8px 12px !important;
         }
-        .leaflet-dark-tooltip:before {
-          border-top-color: rgba(15, 20, 31, 0.95) !important;
+        .leaflet-light-tooltip:before {
+          border-top-color: rgba(255, 255, 255, 0.98) !important;
         }
         .leaflet-container {
-          background-color: #07090e !important;
+          background-color: #f1f5f9 !important;
           font-family: inherit;
         }
       `}</style>

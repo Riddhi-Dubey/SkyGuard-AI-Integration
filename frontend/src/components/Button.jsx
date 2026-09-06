@@ -2,10 +2,10 @@ import { ArrowRight } from "lucide-react";
 
 const VARIANTS = {
   primary:
-    "bg-dawn-400 text-base-950 hover:bg-dawn-300 shadow-[0_0_0_1px_rgba(255,143,77,0.4)]",
+    "bg-sky-600 text-white hover:bg-sky-700 shadow-sm border border-sky-600/30",
   secondary:
-    "bg-transparent text-ink border border-line-strong hover:border-dawn-400/60 hover:text-white",
-  ghost: "bg-transparent text-ink-dim hover:text-ink",
+    "bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm",
+  ghost: "bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100",
 };
 
 export default function Button({
@@ -18,7 +18,7 @@ export default function Button({
 }) {
   return (
     <Component
-      className={`group inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium tracking-tight transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dawn-400 ${VARIANTS[variant]} ${className}`}
+      className={`group inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium tracking-tight transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-atmos-400 ${VARIANTS[variant]} ${className}`}
       {...props}
     >
       {children}

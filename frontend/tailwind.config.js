@@ -5,77 +5,66 @@ export default {
     extend: {
       colors: {
         base: {
-          950: "#070c14",
-          900: "#0b1320",
-          850: "#0f1a2c",
-          800: "#142238",
-          700: "#1c304f",
-          600: "#253f66",
-          500: "#385888",
+          950: "#f1f6fc", // daylight atmospheric sky base
+          900: "#ffffff", // clean cloud-white card/panel surface
+          850: "#f8fafc", // elevated panel header / subtle contrast
+          800: "#edf2f7", // soft pills and secondary button surface
+          700: "#e2e8f0", // light borders and dividers
+          600: "#cbd5e1", // crisp card borders
+          500: "#94a3b8", // muted border lines
         },
         line: {
-          DEFAULT: "rgba(148, 175, 205, 0.14)",
-          soft: "rgba(148, 175, 205, 0.08)",
-          strong: "rgba(148, 175, 205, 0.25)",
+          DEFAULT: "rgba(148, 163, 184, 0.28)", // soft slate border
+          soft: "rgba(148, 163, 184, 0.16)",
+          strong: "rgba(148, 163, 184, 0.45)",
         },
         ink: {
-          DEFAULT: "#edf3fb",
-          dim: "#9bb0cb",
-          faint: "#627794",
+          DEFAULT: "#0f172a", // crisp slate-900 text
+          dim: "#475569",    // readable slate-600 subtext
+          faint: "#64748b",  // muted slate-500 labels
         },
         atmos: {
           50: "#f0f9ff",
+          100: "#e0f2fe",
           200: "#bae6fd",
           300: "#7dd3fc",
           400: "#38bdf8",
-          500: "#0ea5e9",
-          600: "#0284c7",
-          glow: "#38bdf8",
-        },
-        dawn: {
-          100: "#ffe8d1",
-          200: "#ffceA0",
-          300: "#ffab6b",
-          400: "#ff8f4d",
-          500: "#f9773a",
-          600: "#e2612a",
-          700: "#b94d21",
-          glow: "#ff8f4d",
+          500: "#0284c7",
+          600: "#0369a1",
+          glow: "rgba(2, 132, 199, 0.15)",
         },
         meteo: {
-          temp: "#f97316",
-          pressure: "#0ea5e9",
-          humidity: "#06b6d4",
-          wind: "#10b981",
-          rain: "#6366f1",
-          solar: "#eab308",
-          battery: "#22c55e",
+          temp: "#ea580c",     // warm solar amber
+          pressure: "#0284c7", // clear atmospheric blue
+          humidity: "#0891b2", // water vapor cyan
+          wind: "#16a34a",     // fresh breeze green
+          rain: "#4f46e5",     // precipitation indigo
+          solar: "#d97706",    // sunshine gold
+          battery: "#16a34a",  // healthy battery green
         },
         signal: {
-          good: "#10b981",
-          warn: "#f59e0b",
-          bad: "#ef4444",
-          info: "#38bdf8",
+          good: "#16a34a",
+          warn: "#d97706",
+          bad: "#dc2626",
+          info: "#0284c7",
         },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["'Fraunces'", "'Iowan Old Style'", "Georgia", "serif"],
         mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
       },
       boxShadow: {
-        panel: "0 1px 0 rgba(255,255,255,0.03) inset, 0 20px 60px -30px rgba(0,0,0,0.7)",
-        glow: "0 0 40px -8px rgba(95, 211, 240, 0.35)",
-        dawnGlow: "0 0 44px -10px rgba(255, 143, 77, 0.45)",
+        panel: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)",
+        card: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)",
+        glow: "0 0 24px -4px rgba(2, 132, 199, 0.18)",
       },
       backgroundImage: {
-        grid: "linear-gradient(rgba(148,168,194,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,168,194,0.06) 1px, transparent 1px)",
-        noise: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E\")",
+        grid: "linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)",
       },
       keyframes: {
         pulseSoft: {
           "0%, 100%": { opacity: 1, transform: "scale(1)" },
-          "50%": { opacity: 0.55, transform: "scale(1.15)" },
+          "50%": { opacity: 0.7, transform: "scale(1.08)" },
         },
         scan: {
           "0%": { transform: "translateY(-100%)" },
