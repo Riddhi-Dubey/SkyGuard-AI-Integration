@@ -244,35 +244,35 @@ export default function Dashboard() {
   const kpis = useMemo(
     () => [
       {
-        label: "Stations Online",
+        label: "AWS Stations Online",
         value: `${stationsOnline}`,
-        suffix: `/ ${NETWORK_STATS.stationsTotal}`,
-        trend: "+2 this week",
+        suffix: `/ ${NETWORK_STATS.stationsTotal} Synoptic Nodes`,
+        trend: "94.0% National Grid Coverage",
         trendDirection: "up",
         status: "good",
         sparkline: sparklines.stationsOnline,
       },
       {
-        label: "Observations",
+        label: "Telemetry Packets Ingested",
         value: observations.toLocaleString("en-IN"),
-        trend: "live",
+        trend: "INSAT-3DR 1Hz Telemetry",
         trendDirection: "up",
         status: "info",
         sparkline: sparklines.observations,
       },
       {
-        label: "Active Anomalies",
+        label: "Flagged Sensor Anomalies",
         value: `${activeAnomalies}`,
-        trend: "+3 vs yesterday",
+        trend: "Spikes & Louver Heating",
         trendDirection: "down",
         status: "warn",
         sparkline: sparklines.activeAnomalies,
       },
       {
-        label: "Network Health",
+        label: "WMO Data Quality Index",
         value: `${networkHealth}%`,
-        trend: "-0.4% vs 1h",
-        trendDirection: "down",
+        trend: "WMO-No. 8 QC Compliance",
+        trendDirection: "up",
         status: "good",
         sparkline: sparklines.networkHealth,
       },
@@ -337,31 +337,45 @@ export default function Dashboard() {
               <Menu size={16} />
             </button>
             <div>
-              <h1 className="text-[17px] font-semibold tracking-tight text-white">Weather Intelligence Command Center</h1>
-              <p className="text-[12px] text-ink-dim">Real-time monitoring across the AWS observation network.</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-[16px] font-semibold tracking-tight text-white">
+                  National Automatic Weather Station (AWS) Surveillance Center
+                </h1>
+                <span className="rounded border border-atmos-400/40 bg-atmos-400/10 px-2 py-0.5 text-[10px] font-mono-num text-atmos-300">
+                  IMD / MoES NETWORK
+                </span>
+              </div>
+              <p className="text-[12px] text-ink-dim">
+                Operational Surface Synoptic Telemetry, WMO-No. 8 Quality Control & Anomaly Surveillance.
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-[12px] text-ink-dim">
+          <div className="flex items-center gap-3 text-[12px] text-ink-dim">
             {/* Live Interactive Trigger Button */}
             <button
               onClick={handleSimulateAnomaly}
               disabled={isSimulating}
-              className="flex items-center gap-1.5 rounded-full border border-signal-warn/30 bg-signal-warn/10 px-3 py-1 text-signal-warn transition-all hover:bg-signal-warn/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-signal-warn disabled:opacity-50"
-              title="Inject test anomaly via ML & LangGraph engine"
+              className="flex items-center gap-1.5 rounded-full border border-signal-warn/30 bg-signal-warn/10 px-3 py-1 text-signal-warn transition-all hover:bg-signal-warn/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-signal-warn disabled:opacity-50 font-medium"
+              title="Inject test sensor anomaly via ML & LangGraph engine"
             >
               <Zap size={13} className={isSimulating ? "animate-spin text-signal-bad" : ""} />
-              {isSimulating ? "Analyzing ML..." : "Inject Test Anomaly"}
+              {isSimulating ? "Analyzing Sensor..." : "Inject AWS Sensor Anomaly"}
             </button>
 
-            <div className="flex items-center gap-1.5 rounded-full border border-signal-good/25 bg-signal-good/10 px-2.5 py-1 text-signal-good">
+            <div className="flex items-center gap-1.5 rounded-full border border-line bg-base-900/90 px-2.5 py-1 text-[11px] font-mono-num text-ink-dim">
+              <span className="h-1.5 w-1.5 rounded-full bg-signal-good animate-ping" />
+              <span>INSAT-3DR: <strong>402.75 MHz</strong></span>
+            </div>
+
+            <div className="flex items-center gap-1.5 rounded-full border border-signal-good/25 bg-signal-good/10 px-2.5 py-1 text-signal-good font-mono-num text-[11px]">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal-good opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-signal-good" />
               </span>
-              LIVE
+              SYNCED
             </div>
-            <span className="font-mono-num">Last updated: {formatClock(clock)}</span>
+            <span className="font-mono-num text-[11px]">IST: {formatClock(clock)}</span>
           </div>
         </header>
 
@@ -377,14 +391,14 @@ export default function Dashboard() {
                 Focusing on:{" "}
                 <strong className="text-white capitalize">
                   {focusedSection === "overview"
-                    ? "Overview (KPIs)"
+                    ? "AWS Network Ingestion (KPIs)"
                     : focusedSection === "stations"
-                    ? "AWS Stations & Network"
+                    ? "AWS Surface Station Grid"
                     : focusedSection === "monitoring"
-                    ? "Live Sensor Monitoring"
+                    ? "Live Sensor Telemetry"
                     : focusedSection === "anomalies"
-                    ? "Recent Anomalies"
-                    : "AI Analytics & Diagnostics"}
+                    ? "Flagged Sensor Faults"
+                    : "WMO & SHAP Diagnostics"}
                 </strong>
               </span>
               <button
@@ -407,7 +421,7 @@ export default function Dashboard() {
             {focusedSection === "overview" && (
               <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
                 <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
-                  Overview & Network KPI Metrics
+                  National AWS Network Ingestion & Telemetry Health
                 </span>
                 <button
                   onClick={(e) => {
@@ -443,7 +457,7 @@ export default function Dashboard() {
             {focusedSection === "stations" && (
               <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
                 <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
-                  AWS Network Observation & Station Inspector
+                  Automatic Weather Station Grid & Hardware Diagnostics
                 </span>
                 <button
                   onClick={(e) => {
@@ -456,16 +470,16 @@ export default function Dashboard() {
                 </button>
               </div>
             )}
-            <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+            <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-[14px] font-semibold text-white">AWS Network</h2>
-                  <span className="text-[12px] text-ink-faint">{stations.length} stations shown</span>
+                  <h2 className="text-[14px] font-semibold text-white">AWS Surface Observation Network (India Grid)</h2>
+                  <span className="text-[12px] text-ink-faint font-mono-num">{stations.length} Synoptic Nodes Active</span>
                 </div>
                 <NetworkMap stations={stations} selectedId={selectedStationId} onSelect={setSelectedStationId} />
               </div>
               <div>
-                <h2 className="mb-3 text-[14px] font-semibold text-white">Station Inspector</h2>
+                <h2 className="mb-3 text-[14px] font-semibold text-white">AWS Hardware Diagnostics</h2>
                 <div className="h-[460px] lg:h-[520px]">
                   <StationInspector station={selectedStation} onViewDetails={() => openStationDetail(selectedStation)} />
                 </div>
@@ -482,7 +496,14 @@ export default function Dashboard() {
             }}
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[14px] font-semibold text-white">Live Sensor Charts — {selectedStation?.id ?? "AWS-DEL-01"}</h2>
+              <div>
+                <h2 className="text-[14px] font-semibold text-white">
+                  Live AWS Sensor Telemetry — {selectedStation?.stationName || selectedStation?.name || selectedStation?.id} {selectedStation?.wmoId ? `(WMO ${selectedStation.wmoId})` : ""}
+                </h2>
+                <p className="text-[11px] text-ink-dim">
+                  60-Minute Sliding Window · Sampling Frequency 1 Hz · Multi-parameter Time Series
+                </p>
+              </div>
               {focusedSection === "monitoring" && (
                 <button
                   onClick={(e) => {
@@ -497,31 +518,31 @@ export default function Dashboard() {
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
               <SensorChart
-                title="Temperature"
+                title="Air Temperature (Pt100 RTD)"
                 data={seriesToUse}
                 dataKey="temp"
                 unit="°C"
-                color="#4bbcdc"
+                color="#f97316"
                 min={tempMin}
                 max={tempMax}
                 current={tempCurrent}
               />
               <SensorChart
-                title="Atmospheric Pressure"
+                title="Barometric Pressure (PTB330)"
                 data={seriesToUse}
                 dataKey="pressure"
                 unit=" hPa"
-                color="#7ad4ec"
+                color="#0ea5e9"
                 min={pressureMin}
                 max={pressureMax}
                 current={pressureCurrent}
               />
               <SensorChart
-                title="Relative Humidity"
+                title="Relative Humidity (Capacitive)"
                 data={seriesToUse}
                 dataKey="humidity"
                 unit="%"
-                color="#5fd3f0"
+                color="#06b6d4"
                 min={humidityMin}
                 max={humidityMax}
                 current={humidityCurrent}
@@ -539,8 +560,8 @@ export default function Dashboard() {
           >
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h2 className="text-[14px] font-semibold text-white">Recent Anomalies</h2>
-                <span className="text-[12px] text-ink-faint">Click a row for full explainability</span>
+                <h2 className="text-[14px] font-semibold text-white">Flagged AWS Sensor Faults & Quality Control Feed</h2>
+                <span className="text-[12px] text-ink-faint">Rule-based limits + 12D Isolation Forest ML detection</span>
               </div>
               {focusedSection === "anomalies" && (
                 <button
@@ -567,8 +588,8 @@ export default function Dashboard() {
           >
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h2 className="text-[14px] font-semibold text-white">AI Analytics & Root Cause Explainability</h2>
-                <span className="text-[12px] text-ink-faint">SHAP feature attributions, model diagnostics & maintenance risk</span>
+                <h2 className="text-[14px] font-semibold text-white">WMO Sensor Physics, SHAP Explainability & Maintenance Risk</h2>
+                <span className="text-[12px] text-ink-faint">Atmospheric thermodynamic consistency check & field maintenance scoring</span>
               </div>
               {focusedSection === "analytics" && (
                 <button

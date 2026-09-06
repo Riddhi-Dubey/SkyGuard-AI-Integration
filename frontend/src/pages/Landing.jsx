@@ -34,46 +34,47 @@ export default function Landing() {
       <section className="relative overflow-hidden border-b border-line">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 pb-20 pt-16 md:grid-cols-2 md:items-center md:pt-24">
           <div className="animate-rise">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line-strong bg-base-900/60 px-3 py-1.5 text-[11px] font-medium tracking-wide text-ink-dim">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-atmos-500/30 bg-base-900/80 px-3 py-1.5 text-[11px] font-medium tracking-wide text-atmos-300">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal-good opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-signal-good" />
               </span>
-              SYSTEM OPERATIONAL — Real-time anomaly monitoring
+              WMO-No. 8 & 488 QC COMPLIANT · NATIONAL AWS SURVEILLANCE
             </div>
 
-            <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[3.2rem]">
-              AI that keeps every weather observation{" "}
-              <span className="text-atmos-300">trustworthy.</span>
+            <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[3.1rem]">
+              Autonomous Anomaly Detection for{" "}
+              <span className="text-atmos-300">Automatic Weather Stations.</span>
             </h1>
 
             <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-ink-dim">
-              SkyGuard AI continuously analyzes Temperature, Pressure and Relative Humidity
-              observations from Automatic Weather Stations to detect anomalies, identify
-              probable sensor faults and deliver explainable intelligence in real time.
+              Built for India's surface meteorological observation network. SkyGuard AWS continuously
+              verifies Temperature, Barometric Pressure, Relative Humidity, Wind, and Rain telemetry—identifying
+              RTD sensor spikes, tipping bucket clogs, and calibration drift before bad data corrupts
+              national numerical weather models.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Button as={Link} to="/dashboard" icon>
-                Explore Dashboard
+                Open AWS Command Center
               </Button>
               <Button as="a" href="#how-it-works" variant="secondary">
-                How It Works
+                WMO QC Pipeline
               </Button>
             </div>
 
             <div className="mt-12 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-6">
               <div>
-                <div className="font-mono-num text-xl font-semibold text-white">26073</div>
-                <div className="mt-1 text-[11px] text-ink-faint">Problem Statement</div>
+                <div className="font-mono-num text-xl font-semibold text-white">50 Nodes</div>
+                <div className="mt-1 text-[11px] text-ink-faint">National AWS Grid</div>
               </div>
               <div>
-                <div className="font-mono-num text-xl font-semibold text-white">SIH 2026</div>
-                <div className="mt-1 text-[11px] text-ink-faint">Hackathon</div>
+                <div className="font-mono-num text-xl font-semibold text-white">INSAT-3DR</div>
+                <div className="mt-1 text-[11px] text-ink-faint">DCP 402.75 MHz</div>
               </div>
               <div>
-                <div className="font-mono-num text-xl font-semibold text-white">MoES</div>
-                <div className="mt-1 text-[11px] text-ink-faint">IMD Partner</div>
+                <div className="font-mono-num text-xl font-semibold text-white">IMD / MoES</div>
+                <div className="mt-1 text-[11px] text-ink-faint">SIH PS 26073</div>
               </div>
             </div>
           </div>
@@ -89,14 +90,15 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="max-w-xl">
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
-              The Problem
+              Meteorological Hardware Challenges
             </span>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-              Weather data can fail silently.
+              Unattended AWS Sensors Fail Silently.
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-ink-dim">
-              Automatic Weather Stations operate unattended for months. A faulty sensor rarely
-              announces itself — it just quietly corrupts the record.
+              Automatic Weather Stations operate autonomously in extreme environments—from Rajasthan's 50°C heat
+              to coastal monsoon salt spray. Hardware faults rarely declare themselves; they quietly corrupt
+              synoptic records until detected by mathematical quality control.
             </p>
           </div>
 
@@ -125,10 +127,10 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="max-w-xl">
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
-              How SkyGuard Thinks
+              WMO Multi-Tier Quality Control Pipeline
             </span>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-              From raw signal to explained decision.
+              From INSAT Sensor Packets to Explained Actions.
             </h2>
           </div>
 
@@ -142,7 +144,7 @@ export default function Landing() {
                       <Icon size={15} strokeWidth={1.8} />
                     </div>
                     <div className="text-[13px] font-semibold text-white">{step.title}</div>
-                    <p className="mt-2 max-h-0 overflow-hidden text-[12px] leading-relaxed text-ink-dim opacity-0 transition-all duration-300 group-hover:max-h-32 group-hover:opacity-100">
+                    <p className="mt-2 max-h-0 overflow-hidden text-[12px] leading-relaxed text-ink-dim opacity-0 transition-all duration-300 group-hover:max-h-36 group-hover:opacity-100">
                       {step.detail}
                     </p>
                   </div>
@@ -164,29 +166,29 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="max-w-xl">
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
-              Intelligence
+              Meteorological AI & Quality Control
             </span>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-              Detect. Explain. Respond.
+              Detect. Explain. Maintain.
             </h2>
           </div>
 
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
             <IntelligenceCard
-              title="Detect"
-              desc="Identify abnormal observations across Temperature, Pressure and Humidity."
+              title="12D Hybrid Detection"
+              desc="Cross-references WMO-No. 8 physical limits with an Isolation Forest model trained on multi-parameter atmospheric microclimates."
             >
               <MiniDetectViz />
             </IntelligenceCard>
             <IntelligenceCard
-              title="Explain"
-              desc="SHAP-based feature attribution reveals what drove the anomaly."
+              title="SHAP Sensor Attribution"
+              desc="Quantifies the mathematical impact of each meteorological sensor (Temp, Pressure, RH, Wind) on the anomaly flag."
             >
               <MiniExplainViz />
             </IntelligenceCard>
             <IntelligenceCard
-              title="Respond"
-              desc="AI-generated root cause, corrected-value estimate and maintenance risk."
+              title="Hardware Root-Cause Diagnosis"
+              desc="Pinpoints specific failure modes: RTD lead wire detachment, radiation shield heating, or TBRG funnel clogging."
             >
               <MiniRespondViz />
             </IntelligenceCard>
@@ -200,22 +202,22 @@ export default function Landing() {
           <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
             <div>
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
-                Live Network Preview
+                National Synoptic Overview
               </span>
               <h2 className="mt-3 max-w-lg text-3xl font-semibold tracking-tight text-white">
-                A single, continuous view of every station.
+                Continuous surveillance of all 50 AWS observation nodes.
               </h2>
             </div>
             <Button as={Link} to="/dashboard" icon>
-              Open Command Center
+              Open AWS Command Center
             </Button>
           </div>
 
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <PreviewStat label="AWS Stations Online" value={`${NETWORK_STATS.stationsOnline}`} suffix={`/ ${NETWORK_STATS.stationsTotal}`} status="good" />
             <PreviewStat label="Observations Analyzed" value={useCounterFormat(NETWORK_STATS.observations)} status="info" />
-            <PreviewStat label="Data Quality" value={`${NETWORK_STATS.dataQuality}%`} status="good" />
-            <PreviewStat label="Active Anomalies" value={`${NETWORK_STATS.activeAnomalies}`} status="warn" />
+            <PreviewStat label="WMO Data Quality" value={`${NETWORK_STATS.dataQuality}%`} status="good" />
+            <PreviewStat label="Flagged Anomalies" value={`${NETWORK_STATS.activeAnomalies}`} status="warn" />
           </div>
         </div>
       </section>
@@ -225,16 +227,16 @@ export default function Landing() {
         <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-14 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="text-[15px] font-semibold tracking-[0.14em] text-white">
-              SKYGUARD <span className="text-atmos-300">AI</span>
+              SKYGUARD <span className="text-atmos-400">AWS</span>
             </div>
-            <p className="mt-2 max-w-xs text-[13px] text-ink-dim">
-              Intelligent weather observation monitoring.
+            <p className="mt-2 max-w-sm text-[13px] text-ink-dim">
+              National Automatic Weather Station Telemetry & Anomaly Surveillance System.
             </p>
           </div>
           <div className="flex flex-col gap-1 text-[12px] text-ink-faint md:items-end">
-            <span>SIH 2026</span>
-            <span>Problem Statement 26073</span>
-            <span>MoES / IMD</span>
+            <span className="font-semibold text-ink">Smart India Hackathon 2026 · PS 26073</span>
+            <span>Ministry of Earth Sciences (MoES) & India Meteorological Department (IMD)</span>
+            <span>WMO-No. 8 & WMO-No. 488 Quality Control Standards</span>
           </div>
         </div>
       </footer>

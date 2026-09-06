@@ -37,21 +37,28 @@ export default function Navbar() {
   const links = [
     { label: "Platform", href: "#platform" },
     { label: "Intelligence", href: "#intelligence" },
-    { label: "Monitoring", href: "#monitoring" },
+    { label: "AWS Architecture", href: "#platform" },
+    { label: "Sensor Diagnostics", href: "#how-it-works" },
+    { label: "WMO Quality Control", href: "#intelligence" },
   ];
 
   return (
     <header
       className={`sticky top-0 z-50 transition-colors duration-300 ${
-        scrolled ? "bg-base-950/85 backdrop-blur-md border-b border-line" : "border-b border-transparent"
+        scrolled ? "bg-base-950/90 backdrop-blur-md border-b border-line" : "border-b border-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-3">
           <RadarMark />
-          <span className="text-[15px] font-semibold tracking-[0.14em] text-white">
-            SKYGUARD <span className="text-atmos-300">AI</span>
-          </span>
+          <div>
+            <div className="text-[14px] font-semibold tracking-[0.12em] text-white">
+              SKYGUARD <span className="text-atmos-400">AWS</span>
+            </div>
+            <div className="text-[10px] tracking-wider text-ink-faint uppercase font-mono-num">
+              National Weather Station Surveillance
+            </div>
+          </div>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -59,23 +66,23 @@ export default function Navbar() {
             <a
               key={l.label}
               href={l.href}
-              className="text-[13px] font-medium text-ink-dim transition-colors hover:text-ink"
+              className="text-[13px] font-medium text-ink-dim transition-colors hover:text-white"
             >
               {l.label}
             </a>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-5 md:flex">
-          <div className="flex items-center gap-2 text-[12px] text-ink-dim">
+        <div className="hidden items-center gap-4 md:flex">
+          <div className="flex items-center gap-2 rounded-full border border-line bg-base-900/80 px-3 py-1 text-[11px] font-mono-num text-ink-dim">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal-good opacity-60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-signal-good" />
             </span>
-            Live System
+            <span>INSAT-3DR: <strong>ACTIVE</strong></span>
           </div>
-          <Button as={Link} to="/dashboard" variant="secondary" className="!py-2 !px-4 text-[13px]">
-            Open Dashboard
+          <Button as={Link} to="/dashboard" variant="secondary" className="!py-1.5 !px-3 text-[12px]">
+            Open Command Center
           </Button>
         </div>
 
