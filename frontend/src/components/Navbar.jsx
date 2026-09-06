@@ -8,7 +8,7 @@ function RadarMark() {
     <svg width="26" height="26" viewBox="0 0 26 26" fill="none" className="shrink-0">
       <circle cx="13" cy="13" r="11.5" stroke="#2e3849" strokeWidth="1" />
       <circle cx="13" cy="13" r="7.5" stroke="#2e3849" strokeWidth="1" />
-      <path d="M13 13 L13 2.5" stroke="#5fd3f0" strokeWidth="1.4" strokeLinecap="round">
+      <path d="M13 13 L13 2.5" stroke="#ff8f4d" strokeWidth="1.4" strokeLinecap="round">
         <animateTransform
           attributeName="transform"
           type="rotate"
@@ -18,8 +18,8 @@ function RadarMark() {
           repeatCount="indefinite"
         />
       </path>
-      <circle cx="13" cy="13" r="1.6" fill="#5fd3f0" />
-      <circle cx="17.5" cy="8.5" r="1.1" fill="#4bbcdc" />
+      <circle cx="13" cy="13" r="1.6" fill="#ff8f4d" />
+      <circle cx="17.5" cy="8.5" r="1.1" fill="#5fd3f0" />
     </svg>
   );
 }
@@ -52,8 +52,8 @@ export default function Navbar() {
         <Link to="/" className="flex items-center gap-3">
           <RadarMark />
           <div>
-            <div className="text-[14px] font-semibold tracking-[0.12em] text-white">
-              SKYGUARD <span className="text-atmos-400">AWS</span>
+            <div className="font-display text-[15px] font-semibold tracking-wide text-white">
+              SkyGuard <span className="text-dawn-400">AWS</span>
             </div>
             <div className="text-[10px] tracking-wider text-ink-faint uppercase font-mono-num">
               National Weather Station Surveillance

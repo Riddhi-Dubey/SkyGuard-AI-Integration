@@ -38,7 +38,7 @@ export default function Sidebar({ active, onSelect, mobileOpen, onCloseMobile })
             </span>
             <div>
               <div className="text-[13px] font-semibold tracking-[0.14em] text-white">
-                SKYGUARD <span className="text-atmos-400">AWS</span>
+                <span className="font-display font-medium">SkyGuard</span> <span className="text-dawn-400">AWS</span>
               </div>
               <div className="text-[9px] font-mono-num uppercase tracking-wider text-ink-faint">
                 IMD Synoptic Network

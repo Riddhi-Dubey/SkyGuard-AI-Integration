@@ -34,24 +34,24 @@ export default function Landing() {
       <section className="relative overflow-hidden border-b border-line">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 pb-20 pt-16 md:grid-cols-2 md:items-center md:pt-24">
           <div className="animate-rise">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-atmos-500/30 bg-base-900/80 px-3 py-1.5 text-[11px] font-medium tracking-wide text-atmos-300">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-dawn-500/30 bg-base-900/80 px-3 py-1.5 text-[11px] font-medium tracking-wide text-dawn-200">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal-good opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-signal-good" />
               </span>
-              WMO-No. 8 & 488 QC COMPLIANT · NATIONAL AWS SURVEILLANCE
+              Watching over 50 stations, WMO quality standards, every hour of the day
             </div>
 
-            <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[3.1rem]">
-              Autonomous Anomaly Detection for{" "}
-              <span className="text-atmos-300">Automatic Weather Stations.</span>
+            <h1 className="font-display text-4xl font-medium leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.35rem]">
+              Weather sensors fail quietly.{" "}
+              <span className="text-dawn-300">SkyGuard notices first.</span>
             </h1>
 
             <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-ink-dim">
-              Built for India's surface meteorological observation network. SkyGuard AWS continuously
-              verifies Temperature, Barometric Pressure, Relative Humidity, Wind, and Rain telemetry—identifying
-              RTD sensor spikes, tipping bucket clogs, and calibration drift before bad data corrupts
-              national numerical weather models.
+              Built for India's surface meteorological observation network, SkyGuard keeps watch over
+              Temperature, Pressure, Humidity, Wind, and Rain readings coming in from stations across the
+              country—catching a stuck sensor or a drifting gauge before it quietly corrupts the forecasts
+              millions of people rely on.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
@@ -92,7 +92,7 @@ export default function Landing() {
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
               Meteorological Hardware Challenges
             </span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+            <h2 className="mt-3 font-display text-3xl font-medium tracking-tight text-white">
               Unattended AWS Sensors Fail Silently.
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-ink-dim">
@@ -129,7 +129,7 @@ export default function Landing() {
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
               WMO Multi-Tier Quality Control Pipeline
             </span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+            <h2 className="mt-3 font-display text-3xl font-medium tracking-tight text-white">
               From INSAT Sensor Packets to Explained Actions.
             </h2>
           </div>
@@ -168,7 +168,7 @@ export default function Landing() {
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
               Meteorological AI & Quality Control
             </span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+            <h2 className="mt-3 font-display text-3xl font-medium tracking-tight text-white">
               Detect. Explain. Maintain.
             </h2>
           </div>
@@ -204,7 +204,7 @@ export default function Landing() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-atmos-400">
                 National Synoptic Overview
               </span>
-              <h2 className="mt-3 max-w-lg text-3xl font-semibold tracking-tight text-white">
+              <h2 className="mt-3 max-w-lg font-display text-3xl font-medium tracking-tight text-white">
                 Continuous surveillance of all 50 AWS observation nodes.
               </h2>
             </div>
@@ -226,8 +226,8 @@ export default function Landing() {
       <footer className="bg-base-950">
         <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-14 md:flex-row md:items-start md:justify-between">
           <div>
-            <div className="text-[15px] font-semibold tracking-[0.14em] text-white">
-              SKYGUARD <span className="text-atmos-400">AWS</span>
+            <div className="font-display text-[16px] font-medium tracking-wide text-white">
+              SkyGuard <span className="text-dawn-400">AWS</span>
             </div>
             <p className="mt-2 max-w-sm text-[13px] text-ink-dim">
               National Automatic Weather Station Telemetry & Anomaly Surveillance System.

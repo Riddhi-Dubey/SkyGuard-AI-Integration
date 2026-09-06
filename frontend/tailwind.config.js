@@ -32,6 +32,16 @@ export default {
           600: "#0284c7",
           glow: "#38bdf8",
         },
+        dawn: {
+          100: "#ffe8d1",
+          200: "#ffceA0",
+          300: "#ffab6b",
+          400: "#ff8f4d",
+          500: "#f9773a",
+          600: "#e2612a",
+          700: "#b94d21",
+          glow: "#ff8f4d",
+        },
         meteo: {
           temp: "#f97316",
           pressure: "#0ea5e9",
@@ -50,11 +60,13 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["'Fraunces'", "'Iowan Old Style'", "Georgia", "serif"],
         mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
       },
       boxShadow: {
         panel: "0 1px 0 rgba(255,255,255,0.03) inset, 0 20px 60px -30px rgba(0,0,0,0.7)",
         glow: "0 0 40px -8px rgba(95, 211, 240, 0.35)",
+        dawnGlow: "0 0 44px -10px rgba(255, 143, 77, 0.45)",
       },
       backgroundImage: {
         grid: "linear-gradient(rgba(148,168,194,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,168,194,0.06) 1px, transparent 1px)",
