@@ -125,16 +125,16 @@ class StateStore:
         # Deep LangGraph diagnostic contracts keyed by incident ID
         self.anomaly_details: Dict[str, Dict[str, Any]] = {}
         
-        # Network KPI stats
+        # Network KPI stats (dynamically aligned with actual configured stations)
         self.observations_count = 1284920
-        self.active_anomalies = 7
-        self.stations_online = 47
-        self.stations_total = 50
-        self.network_health = 96.4
+        self.active_anomalies = sum(1 for s in self.stations.values() if s.get("status") in ("anomaly", "warning"))
+        self.stations_total = len(self.stations)
+        self.stations_online = sum(1 for s in self.stations.values() if s.get("status") != "offline")
+        self.network_health = round(100.0 - (self.active_anomalies / max(1, self.stations_total) * 15), 1)
         self.sparklines = {
-            "stationsOnline": [44, 45, 45, 46, 46, 47, 47, 46, 47, 47],
+            "stationsOnline": [11, 11, 12, 11, 12, 12, 12, 11, 12, 12],
             "observations": [11, 14, 13, 17, 16, 19, 18, 21, 20, 23],
-            "activeAnomalies": [3, 4, 4, 5, 5, 6, 6, 7, 6, 7],
+            "activeAnomalies": [1, 2, 2, 2, 1, 2, 2, 2, 1, 2],
             "networkHealth": [97.8, 97.5, 97.1, 96.9, 96.6, 96.8, 96.5, 96.2, 96.6, 96.4],
         }
 
@@ -241,15 +241,18 @@ class StateStore:
 
     def get_stats(self) -> Dict[str, Any]:
         """
-        Returns network-wide KPI statistics.
+        Returns network-wide KPI statistics dynamically reflecting current station states.
         """
+        online_count = sum(1 for s in self.stations.values() if s.get("status") != "offline")
+        total_count = len(self.stations)
+        active_anom_count = sum(1 for s in self.stations.values() if s.get("status") in ("anomaly", "warning"))
         return {
-            "stationsOnline": self.stations_online,
-            "stationsTotal": self.stations_total,
+            "stationsOnline": online_count,
+            "stationsTotal": total_count,
             "observations": self.observations_count,
             "dataQuality": 99.2,
-            "activeAnomalies": self.active_anomalies,
-            "networkHealth": self.network_health,
+            "activeAnomalies": active_anom_count,
+            "networkHealth": round(100.0 - (active_anom_count / max(1, total_count) * 15), 1),
             "sparklines": self.sparklines
         }
 

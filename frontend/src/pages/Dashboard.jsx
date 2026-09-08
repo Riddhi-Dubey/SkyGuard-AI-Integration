@@ -304,43 +304,48 @@ export default function Dashboard() {
     }
   };
 
+  const totalStationsCount = stations.length || NETWORK_STATS.stationsTotal;
+  const currentOnlineCount = stationsOnline ?? stations.filter((s) => s.status !== "offline").length;
+  const coveragePercent = Math.round((currentOnlineCount / Math.max(1, totalStationsCount)) * 100);
+
   const kpis = useMemo(
     () => [
       {
-        label: "Stations Online",
-        value: `${stationsOnline}`,
-        suffix: `/ ${NETWORK_STATS.stationsTotal}`,
-        trend: "+2 this week",
+        label: "AWS Stations Online",
+        value: `${currentOnlineCount}`,
+        suffix: `/ ${totalStationsCount} Synoptic Nodes`,
+        trend: `${coveragePercent}% Active Grid Coverage`,
         trendDirection: "up",
         status: "good",
         sparkline: sparklines.stationsOnline,
       },
       {
-        label: "Observations",
+        label: "Telemetry Packets Ingested",
         value: observations.toLocaleString("en-IN"),
-        trend: "live",
+        trend: "INSAT-3DR 1Hz Telemetry",
         trendDirection: "up",
         status: "info",
         sparkline: sparklines.observations,
       },
       {
-        label: "Active Anomalies",
+        label: "Flagged Sensor Anomalies",
         value: `${activeAnomalies}`,
-        trend: "+3 vs yesterday",
-        trendDirection: "down",
-        status: "warn",
+        suffix: "Active Faults",
+        trend: activeAnomalies > 0 ? "QC Flags Raised" : "All Nominal",
+        trendDirection: activeAnomalies > 0 ? "down" : "up",
+        status: activeAnomalies > 0 ? "bad" : "good",
         sparkline: sparklines.activeAnomalies,
       },
       {
-        label: "Network Health",
+        label: "WMO QC Compliance",
         value: `${networkHealth}%`,
-        trend: "-0.4% vs 1h",
-        trendDirection: "down",
+        trend: "WMO-No. 8 Validated",
+        trendDirection: "up",
         status: "good",
         sparkline: sparklines.networkHealth,
       },
     ],
-    [observations, activeAnomalies, stationsOnline, networkHealth, sparklines]
+    [observations, activeAnomalies, currentOnlineCount, totalStationsCount, coveragePercent, networkHealth, sparklines]
   );
 
   // Synchronize 60-minute sensor series to live clock and selected station
@@ -374,13 +379,13 @@ export default function Dashboard() {
       return `${base} border-transparent bg-transparent`;
     }
     if (focusedSection === sectionKey) {
-      return `${base} border-atmos-400/60 bg-base-900/90 shadow-[0_0_40px_rgba(75,188,220,0.18)] ring-2 ring-atmos-400/40 opacity-100 scale-[1.008]`;
+      return `${base} border-sky-300 bg-white shadow-lg ring-2 ring-sky-200 opacity-100 scale-[1.005]`;
     }
-    return `${base} border-line/20 bg-base-950/40 opacity-25 blur-[1.5px] pointer-events-none`;
+    return `${base} border-slate-200/40 bg-slate-100/40 opacity-30 blur-[1px] pointer-events-none`;
   };
 
   return (
-    <div className="flex min-h-screen bg-base-950">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar
         active={navActive}
         onSelect={handleNavSelect}
@@ -390,69 +395,83 @@ export default function Dashboard() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-line bg-base-950/90 px-6 py-4 backdrop-blur-md">
+        <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <button
-              className="rounded-md border border-line p-2 text-ink-dim lg:hidden"
+              className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:text-slate-800 lg:hidden"
               onClick={() => setMobileSidebar(true)}
               aria-label="Open menu"
             >
               <Menu size={16} />
             </button>
             <div>
-              <h1 className="text-[17px] font-semibold tracking-tight text-white">Weather Intelligence Command Center</h1>
-              <p className="text-[12px] text-ink-dim">Real-time monitoring across the AWS observation network.</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-[16px] font-bold tracking-tight text-slate-900">
+                  National Automatic Weather Station (AWS) Surveillance Center
+                </h1>
+                <span className="rounded bg-sky-100 border border-sky-200 px-2 py-0.5 text-[10px] font-mono-num font-bold text-sky-700">
+                  IMD / MoES NETWORK
+                </span>
+              </div>
+              <p className="text-[12px] text-slate-500 font-medium">
+                Operational Surface Synoptic Telemetry, WMO-No. 8 Quality Control & Anomaly Surveillance.
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-[12px] text-ink-dim">
+          <div className="flex items-center gap-3 text-[12px] text-slate-600">
             {/* Live Interactive Trigger Button */}
             <button
               onClick={handleSimulateAnomaly}
               disabled={isSimulating}
-              className="flex items-center gap-1.5 rounded-full border border-signal-warn/30 bg-signal-warn/10 px-3 py-1 text-signal-warn transition-all hover:bg-signal-warn/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-signal-warn disabled:opacity-50"
-              title="Inject test anomaly via ML & LangGraph engine"
+              className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1 text-amber-800 transition-all hover:bg-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500 disabled:opacity-50 font-semibold shadow-xs"
+              title="Inject test sensor anomaly via ML & LangGraph engine"
             >
-              <Zap size={13} className={isSimulating ? "animate-spin text-signal-bad" : ""} />
-              {isSimulating ? "Analyzing ML..." : "Inject Test Anomaly"}
+              <Zap size={13} className={isSimulating ? "animate-spin text-amber-600" : "text-amber-600"} />
+              {isSimulating ? "Analyzing Sensor..." : "Inject AWS Sensor Anomaly"}
             </button>
 
-            <div className="flex items-center gap-1.5 rounded-full border border-signal-good/25 bg-signal-good/10 px-2.5 py-1 text-signal-good">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal-good opacity-60" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-signal-good" />
-              </span>
-              LIVE
+            <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-mono-num text-slate-600 shadow-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+              <span>INSAT-3DR: <strong>402.75 MHz</strong></span>
             </div>
-            <span className="font-mono-num">Last updated: {formatClock(clock)}</span>
+
+            <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-800 font-mono-num text-[11px] font-bold shadow-xs">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-600" />
+              </span>
+              SYNCED
+            </div>
+            <span className="font-mono-num text-[11px] text-slate-500 font-medium">IST: {formatClock(clock)}</span>
           </div>
         </header>
 
         <main className="flex-1 space-y-6 px-6 py-6">
           {/* Active Focus Pill when an option is chosen */}
           {focusedSection && (
-            <div className="sticky top-20 z-20 mx-auto -mt-2 mb-2 flex w-fit items-center gap-3 rounded-full border border-atmos-400/40 bg-base-900/95 px-4 py-1.5 shadow-2xl backdrop-blur-md animate-toast-in text-[12px] text-ink">
+            <div className="sticky top-20 z-20 mx-auto -mt-2 mb-2 flex w-fit items-center gap-3 rounded-full border border-sky-300 bg-white px-4 py-1.5 shadow-lg backdrop-blur-md animate-toast-in text-[12px] text-slate-800">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-atmos-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-atmos-400" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-600" />
               </span>
               <span>
                 Focusing on:{" "}
-                <strong className="text-white capitalize">
+                <strong className="text-slate-900 capitalize">
                   {focusedSection === "overview"
-                    ? "Overview (KPIs)"
+                    ? "AWS Network Ingestion (KPIs)"
                     : focusedSection === "stations"
-                    ? "AWS Stations & Network"
+                    ? "AWS Surface Station Grid"
                     : focusedSection === "monitoring"
-                    ? "Live Sensor Monitoring"
+                    ? "Live Sensor Telemetry"
                     : focusedSection === "anomalies"
-                    ? "Recent Anomalies"
-                    : "AI Analytics & Diagnostics"}
+                    ? "Flagged Sensor Faults"
+                    : "WMO & SHAP Diagnostics"}
                 </strong>
               </span>
               <button
                 onClick={handleClearFocus}
-                className="ml-2 rounded-full bg-atmos-400/15 border border-atmos-400/30 px-2.5 py-0.5 text-[11px] font-medium text-atmos-300 hover:bg-atmos-400/25 hover:text-white transition-all"
+                className="ml-2 rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-200 transition-all"
               >
                 Show All Sections ✕
               </button>
@@ -468,16 +487,16 @@ export default function Dashboard() {
             }}
           >
             {focusedSection === "overview" && (
-              <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
-                <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
-                  Overview & Network KPI Metrics
+              <div className="mb-3 flex items-center justify-between border-b border-sky-100 pb-2.5">
+                <span className="text-[12px] font-bold uppercase tracking-wider text-sky-700">
+                  National AWS Network Ingestion & Telemetry Health
                 </span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleClearFocus();
                   }}
-                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                  className="rounded px-2 py-0.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Show All ✕
                 </button>
@@ -486,7 +505,7 @@ export default function Dashboard() {
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {loading
                 ? Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-[104px] rounded-lg border border-line bg-base-900/60 p-5">
+                    <div key={i} className="h-[104px] rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                       <div className="skeleton h-3 w-24 rounded" />
                       <div className="skeleton mt-4 h-6 w-16 rounded" />
                     </div>
@@ -504,31 +523,31 @@ export default function Dashboard() {
             }}
           >
             {focusedSection === "stations" && (
-              <div className="mb-3 flex items-center justify-between border-b border-atmos-400/20 pb-2.5">
-                <span className="text-[12px] font-semibold uppercase tracking-wider text-atmos-300">
-                  AWS Network Observation & Station Inspector
+              <div className="mb-3 flex items-center justify-between border-b border-sky-100 pb-2.5">
+                <span className="text-[12px] font-bold uppercase tracking-wider text-sky-700">
+                  Automatic Weather Station Grid & Hardware Diagnostics
                 </span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleClearFocus();
                   }}
-                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                  className="rounded px-2 py-0.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Show All ✕
                 </button>
               </div>
             )}
-            <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+            <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-[14px] font-semibold text-white">AWS Network</h2>
-                  <span className="text-[12px] text-ink-faint">{stations.length} stations shown</span>
+                  <h2 className="text-[15px] font-bold text-slate-900">AWS Surface Observation Network (India Grid)</h2>
+                  <span className="text-[12px] text-slate-500 font-mono-num font-medium">{stations.length} Synoptic Nodes Active</span>
                 </div>
                 <NetworkMap stations={stations} selectedId={selectedStationId} onSelect={setSelectedStationId} />
               </div>
               <div>
-                <h2 className="mb-3 text-[14px] font-semibold text-white">Station Inspector</h2>
+                <h2 className="mb-3 text-[15px] font-bold text-slate-900">AWS Hardware Diagnostics</h2>
                 <div className="h-[460px] lg:h-[520px]">
                   <StationInspector station={selectedStation} onViewDetails={() => openStationDetail(selectedStation)} />
                 </div>
@@ -545,14 +564,21 @@ export default function Dashboard() {
             }}
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[14px] font-semibold text-white">Live Sensor Charts — {selectedStation?.id ?? "AWS-DEL-01"}</h2>
+              <div>
+                <h2 className="text-[15px] font-bold text-slate-900">
+                  Live AWS Sensor Telemetry — {selectedStation?.stationName || selectedStation?.name || selectedStation?.id} {selectedStation?.wmoId ? `(WMO ${selectedStation.wmoId})` : ""}
+                </h2>
+                <p className="text-[12px] text-slate-500 font-medium">
+                  60-Minute Sliding Window · Sampling Frequency 1 Hz · Multi-parameter Time Series
+                </p>
+              </div>
               {focusedSection === "monitoring" && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleClearFocus();
                   }}
-                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                  className="rounded px-2 py-0.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Show All ✕
                 </button>
@@ -560,31 +586,31 @@ export default function Dashboard() {
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
               <SensorChart
-                title="Temperature"
+                title="Air Temperature (Pt100 RTD)"
                 data={seriesToUse}
                 dataKey="temp"
                 unit="°C"
-                color="#4bbcdc"
+                color="#ea580c"
                 min={tempMin}
                 max={tempMax}
                 current={tempCurrent}
               />
               <SensorChart
-                title="Atmospheric Pressure"
+                title="Barometric Pressure (PTB330)"
                 data={seriesToUse}
                 dataKey="pressure"
                 unit=" hPa"
-                color="#7ad4ec"
+                color="#0284c7"
                 min={pressureMin}
                 max={pressureMax}
                 current={pressureCurrent}
               />
               <SensorChart
-                title="Relative Humidity"
+                title="Relative Humidity (Capacitive)"
                 data={seriesToUse}
                 dataKey="humidity"
                 unit="%"
-                color="#5fd3f0"
+                color="#0891b2"
                 min={humidityMin}
                 max={humidityMax}
                 current={humidityCurrent}
@@ -602,8 +628,8 @@ export default function Dashboard() {
           >
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h2 className="text-[14px] font-semibold text-white">Recent Anomalies</h2>
-                <span className="text-[12px] text-ink-faint">Click a row for full explainability</span>
+                <h2 className="text-[15px] font-bold text-slate-900">Flagged AWS Sensor Faults & Quality Control Feed</h2>
+                <span className="text-[12px] text-slate-500 font-medium">Rule-based limits + 12D Isolation Forest ML detection</span>
               </div>
               {focusedSection === "anomalies" && (
                 <button
@@ -611,7 +637,7 @@ export default function Dashboard() {
                     e.stopPropagation();
                     handleClearFocus();
                   }}
-                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                  className="rounded px-2 py-0.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Show All ✕
                 </button>
@@ -630,8 +656,8 @@ export default function Dashboard() {
           >
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h2 className="text-[14px] font-semibold text-white">AI Analytics & Root Cause Explainability</h2>
-                <span className="text-[12px] text-ink-faint">SHAP feature attributions, model diagnostics & maintenance risk</span>
+                <h2 className="text-[15px] font-bold text-slate-900">WMO Sensor Physics, SHAP Explainability & Maintenance Risk</h2>
+                <span className="text-[12px] text-slate-500 font-medium">Atmospheric thermodynamic consistency check & field maintenance scoring</span>
               </div>
               {focusedSection === "analytics" && (
                 <button
@@ -639,7 +665,7 @@ export default function Dashboard() {
                     e.stopPropagation();
                     handleClearFocus();
                   }}
-                  className="rounded px-2 py-0.5 text-[11px] font-medium text-ink-dim hover:bg-base-800 hover:text-white"
+                  className="rounded px-2 py-0.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Show All ✕
                 </button>

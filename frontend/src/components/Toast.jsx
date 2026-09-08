@@ -10,34 +10,34 @@ export default function Toast({ toasts, onDismiss }) {
         return (
           <div
             key={t.id}
-            className={`animate-toast-in pointer-events-auto flex w-[320px] items-start gap-3 rounded-lg border bg-base-900/95 p-4 shadow-panel backdrop-blur-sm ${
-              isSuccess ? "border-signal-good/30" : "border-signal-bad/30"
+            className={`animate-toast-in pointer-events-auto flex w-[320px] items-start gap-3 rounded-xl border bg-white p-4 shadow-xl ${
+              isSuccess ? "border-emerald-200" : "border-rose-200"
             }`}
           >
             <div
-              className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
+              className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
                 isSuccess
-                  ? "bg-signal-good/10 text-signal-good"
-                  : "bg-signal-bad/10 text-signal-bad"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+                  : "bg-rose-50 border-rose-200 text-rose-600"
               }`}
             >
-              {isSuccess ? <CheckCircle2 size={15} /> : <AlertTriangle size={14} />}
+              {isSuccess ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
             </div>
             <div className="flex-1">
-              <div className="text-[13px] font-semibold text-white">
+              <div className="text-[13px] font-bold text-slate-900">
                 {t.title || (isSuccess ? "Telemetry Correction Applied" : "Anomaly Alert")}
               </div>
-              <div className="mt-0.5 font-mono-num text-[12px] text-ink-dim">
+              <div className="mt-0.5 font-mono-num text-[12px] text-slate-600 font-medium">
                 {t.station ? `${t.station} · ` : ""}{t.parameter}
                 {t.confidence ? ` · ${t.confidence}%` : ""}
               </div>
             </div>
             <button
               onClick={() => onDismiss(t.id)}
-              className="text-ink-faint transition-colors hover:text-ink"
+              className="text-slate-400 transition-colors hover:text-slate-700"
               aria-label="Dismiss notification"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           </div>
         );

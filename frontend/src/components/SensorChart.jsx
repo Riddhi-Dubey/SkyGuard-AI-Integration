@@ -10,23 +10,23 @@ import {
 } from "recharts";
 
 const COLORS = {
-  temp: "#4bbcdc",
-  pressure: "#7ad4ec",
-  humidity: "#5fd3f0",
+  temp: "#ea580c",
+  pressure: "#0284c7",
+  humidity: "#0891b2",
 };
 
 function CustomTooltip({ active, payload, label, unit }) {
   if (!active || !payload?.length) return null;
   const point = payload[0];
   return (
-    <div className="rounded-md border border-line-strong bg-base-900/95 px-3 py-2 text-[11px] shadow-panel">
-      <div className="text-ink-faint">{label}</div>
-      <div className="mt-1 font-mono-num font-semibold text-white">
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] shadow-lg">
+      <div className="text-slate-400 font-medium">{label}</div>
+      <div className="mt-1 font-mono-num font-bold text-slate-900">
         {point.value}
         {unit}
       </div>
       {point.payload.anomaly && (
-        <div className="mt-1 font-semibold text-signal-bad">Anomaly point</div>
+        <div className="mt-1 font-bold text-rose-600">⚠️ Anomaly Flagged</div>
       )}
     </div>
   );
@@ -34,18 +34,18 @@ function CustomTooltip({ active, payload, label, unit }) {
 
 export default function SensorChart({ title, data, dataKey, unit, color, min, max, current }) {
   const anomalyPoint = data.find((d) => d.anomaly);
-  const stroke = color || COLORS[dataKey] || "#4bbcdc";
+  const stroke = color || COLORS[dataKey] || "#0284c7";
 
   return (
-    <div className="rounded-lg border border-line bg-base-900/60 p-5">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-1 flex items-center justify-between">
-        <h4 className="text-[13px] font-semibold text-white">{title}</h4>
-        <span className="font-mono-num text-[15px] font-semibold text-white">
+        <h4 className="text-[14px] font-bold text-slate-900">{title}</h4>
+        <span className="font-mono-num text-[16px] font-bold text-slate-900">
           {current}
-          <span className="ml-0.5 text-[11px] font-normal text-ink-faint">{unit}</span>
+          <span className="ml-0.5 text-[11px] font-normal text-slate-400">{unit}</span>
         </span>
       </div>
-      <div className="mb-3 flex items-center gap-4 text-[10px] text-ink-faint">
+      <div className="mb-3 flex items-center gap-4 text-[11px] text-slate-400 font-medium">
         <span>MIN {min}{unit}</span>
         <span>MAX {max}{unit}</span>
         <span className="ml-auto">Last 60 min</span>
@@ -54,29 +54,28 @@ export default function SensorChart({ title, data, dataKey, unit, color, min, ma
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
-            <CartesianGrid stroke="#161c2a" vertical={false} />
+            <CartesianGrid stroke="#f1f5f9" vertical={false} />
             <XAxis
               dataKey="time"
-              tick={{ fill: "#5e6b80", fontSize: 10 }}
-              axisLine={{ stroke: "#161c2a" }}
+              tick={{ fill: "#94a3b8", fontSize: 10 }}
+              axisLine={{ stroke: "#e2e8f0" }}
               tickLine={false}
               interval={14}
             />
             <YAxis
-              tick={{ fill: "#5e6b80", fontSize: 10 }}
+              tick={{ fill: "#94a3b8", fontSize: 10 }}
               axisLine={false}
               tickLine={false}
               domain={["auto", "auto"]}
               width={36}
             />
-            <Tooltip content={<CustomTooltip unit={unit} />} cursor={{ stroke: "#2e3849" }} />
+            <Tooltip content={<CustomTooltip unit={unit} />} />
             <Line
               type="monotone"
               dataKey={dataKey}
               stroke={stroke}
-              strokeWidth={1.8}
+              strokeWidth={2}
               dot={false}
-              activeDot={{ r: 3.5, fill: stroke }}
               isAnimationActive={false}
             />
             {anomalyPoint && (
@@ -84,9 +83,9 @@ export default function SensorChart({ title, data, dataKey, unit, color, min, ma
                 x={anomalyPoint.time}
                 y={anomalyPoint[dataKey]}
                 r={5}
-                fill="#f0555a"
-                stroke="#f0555a"
-                fillOpacity={0.25}
+                fill="#dc2626"
+                stroke="#ffffff"
+                strokeWidth={2}
               />
             )}
           </LineChart>

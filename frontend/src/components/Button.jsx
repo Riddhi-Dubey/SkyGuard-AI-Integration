@@ -2,10 +2,10 @@ import { ArrowRight } from "lucide-react";
 
 const VARIANTS = {
   primary:
-    "bg-atmos-400 text-base-950 hover:bg-atmos-300 shadow-[0_0_0_1px_rgba(95,211,240,0.4)]",
+    "bg-sky-600 text-white hover:bg-sky-700 shadow-sm border border-sky-600/30",
   secondary:
-    "bg-transparent text-ink border border-line-strong hover:border-atmos-400/60 hover:text-white",
-  ghost: "bg-transparent text-ink-dim hover:text-ink",
+    "bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm",
+  ghost: "bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100",
 };
 
 export default function Button({
