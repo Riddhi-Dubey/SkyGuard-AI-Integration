@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyGuard AI — SIH 2025/2026 Presentation Slides</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+      padding: 30px;
+    }
+    .slide {
+      background: white;
+      max-width: 1100px;
+      margin: 0 auto 40px auto;
+      padding: 40px 50px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      position: relative;
+    }
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+    .team-badge {
+      border: 2px solid #0284c7;
+      border-radius: 50px;
+      padding: 6px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0284c7;
+    }
+    .slide-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sih-badge {
+      font-size: 12px;
+      font-weight: 800;
+      color: #ea580c;
+      background: #ffedd5;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid #fed7aa;
+    }
+    .banner {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0369a1;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 32% 38% 28%;
+      gap: 16px;
+    }
+    .card {
+      border-radius: 10px;
+      padding: 18px;
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .card h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .card li {
+      margin-bottom: 8px;
+    }
+    .card-problem {
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      color: #881337;
+    }
+    .card-problem h3 { color: #be123c; }
+    
+    .card-solution {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      color: #1e293b;
+    }
+    .card-solution h3 { color: #0284c7; }
+
+    .card-diff {
+      background: #faf5ff;
+      border: 1.5px solid #e9d5ff;
+      color: #581c87;
+      margin-bottom: 14px;
+    }
+    .card-diff h3 { color: #7e22ce; }
+
+    .card-val {
+      background: #ecfdf5;
+      border: 1.5px solid #a7f3d0;
+      color: #064e3b;
+    }
+    .card-val h3 { color: #047857; }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 66% 32%;
+      gap: 20px;
+    }
+    .tech-stack-card {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .tech-stack-card h3 {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 800;
+      margin-top: 0;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 8px;
+    }
+    .tech-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .tech-list li {
+      padding: 6px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .print-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+      z-index: 100;
+    }
+    .print-btn:hover { background: #0369a1; }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+
+  <!-- SLIDE 1 -->
+  <div class="slide">
+    <div class="slide-header">
+      <div class="team-badge">YOUR TEAM NAME</div>
+      <div class="slide-title">SKYGUARD AI</div>
+      <div class="sih-badge">SMART INDIA HACKATHON 2025/2026</div>
+    </div>
+
+    <div class="banner">
+      📡 AWS Sensors ➔ ⚡ Physics Engine ➔ 🤖 Isolation Forest ➔ 🧠 LangGraph GenAI ➔ 📧 Email Alert ➔ 📊 Live Dashboard
+    </div>
+
+    <div class="grid-3">
+      <!-- PROBLEM -->
+      <div class="card card-problem">
+        <h3>[ PROBLEM ]</h3>
+        <ul>
+          <li><strong>Harsh Field Sensor Failures:</strong> Extreme weather causes frequent electrical spikes, dead flatlines, and calibration drifts in AWS stations.</li>
+          <li><strong>Flawed Static Thresholds:</strong> Simple rule-based filters miss slow sensor degradation and raise false alarms during real storms.</li>
+          <li><strong>Black-Box ML Lacks Diagnostics:</strong> Standard models output boolean True/False without pinpointing which sensor failed or why.</li>
+          <li><strong>Forecasting Data Pollution:</strong> Delayed manual quality screening allows bad data into Numerical Weather Prediction (NWP) models.</li>
+        </ul>
+      </div>
+
+      <!-- OUR SOLUTION -->
+      <div class="card card-solution">
+        <h3>[ Our Solution ]</h3>
+        <p style="font-weight:700; margin-top:0; font-size:12px;">An Agentic AI-powered AWS diagnostics pipeline that:</p>
+        <ul>
+          <li><strong>Ingests Real-Time Telemetry:</strong> Streams 10-minute multi-parameter readings (T, P, RH) across AWS stations.</li>
+          <li><strong>Two-Tier Hybrid Detection:</strong> Checks thermodynamic boundary rates (&Delta;T &gt; 5&deg;C/10min) alongside Isolation Forest ML.</li>
+          <li><strong>LangGraph Agentic Diagnostics:</strong> 6-node state machine computes SHAP feature attributions and root-cause narratives.</li>
+          <li><strong>Non-Destructive Baseline Correction:</strong> Computes physical correction baselines without overwriting raw records.</li>
+          <li><strong>Autonomous Action & Alerting:</strong> Sends instant HTML alerts with prescriptive action plans for field technicians.</li>
+        </ul>
+      </div>
+
+      <!-- RIGHT CARDS -->
+      <div>
+        <div class="card card-diff">
+          <h3>Why Different</h3>
+          <ul>
+            <li><strong>Physics-Coupled:</strong> Separates real storms from hardware faults via thermodynamic coupling.</li>
+            <li><strong>SHAP Explainable:</strong> Quantifies exact feature contribution scores.</li>
+            <li><strong>Agentic Action:</strong> Autonomously dispatches alerts instead of passive logging.</li>
+          </ul>
+        </div>
+
+        <div class="card card-val">
+          <h3>Key Value Proposition</h3>
+          <ul>
+            <li><strong>99%+ Meteorological Trust:</strong> Pristine inputs for weather & disaster models.</li>
+            <li><strong>Faster MTTR:</strong> Prescriptive repair actions cut troubleshooting time.</li>
+            <li><strong>Zero DB Lock-in:</strong> In-memory speed (&lt;15ms) with pluggable storage.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide">
+    <div class="slide-header">
+      <div class="team-badge">YOUR TEAM NAME</div>
+      <div class="slide-title">TECHNICAL APPROACH</div>
+      <div class="sih-badge">SMART INDIA HACKATHON 2025/2026</div>
+    </div>
+
+    <div class="tech-grid">
+      <div>
+        <h4 style="margin: 0 0 10px 0; color: #0284c7; font-size: 14px; text-transform: uppercase;">1. System Architecture</h4>
+        <div class="mermaid">
+          flowchart LR
+            A[AWS Stations] --> B[FastAPI Gateway]
+            B --> C[Physics Gate]
+            C --> D[Isolation Forest]
+            D -->|Flagged| E[LangGraph 6-Node Workflow]
+            E --> F[Email Alert]
+            E --> G[React Dashboard]
+            G --> H[Pluggable DB]
+            
+            style A fill:#E0F2FE,stroke:#0284C7,color:#0369A1
+            style B fill:#E0F2FE,stroke:#0284C7,color:#0369A1
+            style C fill:#FEF3C7,stroke:#D97706,color:#92400E
+            style D fill:#F3E8FF,stroke:#7C3AED,color:#5B21B6
+            style E fill:#F3E8FF,stroke:#7C3AED,color:#5B21B6
+            style F fill:#ECFDF5,stroke:#059669,color:#065F46
+            style G fill:#ECFDF5,stroke:#059669,color:#065F46
+            style H fill:#F1F5F9,stroke:#64748B,color:#334155
+        </div>
+
+        <h4 style="margin: 20px 0 10px 0; color: #0284c7; font-size: 14px; text-transform: uppercase;">2. Process Flowchart</h4>
+        <div class="mermaid">
+          flowchart LR
+            P1[1. Raw Ingest] --> P2[2. Feature Eng]
+            P2 --> P3{3. Physics Gate}
+            P3 -->|Violated| P5[5. LangGraph & SHAP]
+            P3 -->|OK| P4{4. Isolation Forest}
+            P4 -->|Anomaly| P5
+            P4 -->|Nominal| P8[Nominal Baseline]
+            P5 --> P6[6. Estimate Correction]
+            P6 --> P7[7. Alert & HITL Action]
+
+            style P1 fill:#E0F2FE,stroke:#0284C7,color:#0369A1
+            style P2 fill:#E0F2FE,stroke:#0284C7,color:#0369A1
+            style P3 fill:#FEF3C7,stroke:#D97706,color:#92400E
+            style P4 fill:#FEF3C7,stroke:#D97706,color:#92400E
+            style P5 fill:#F3E8FF,stroke:#7C3AED,color:#5B21B6
+            style P6 fill:#F3E8FF,stroke:#7C3AED,color:#5B21B6
+            style P7 fill:#ECFDF5,stroke:#059669,color:#065F46
+            style P8 fill:#F1F5F9,stroke:#64748B,color:#334155
+        </div>
+      </div>
+
+      <!-- TECH STACK CARD -->
+      <div class="tech-stack-card">
+        <h3>Tech Stack Used:</h3>
+        <ul class="tech-list">
+          <li>🐍 Python 3.12 (Core ML & Engine)</li>
+          <li>🌲 Scikit-Learn (Isolation Forest)</li>
+          <li>📊 SHAP (Feature Attribution)</li>
+          <li>🧠 LangGraph (Stateful Agentic Graph)</li>
+          <li>⚡ FastAPI & Uvicorn (Streaming API)</li>
+          <li>📈 NumPy & Pandas (Rolling Features)</li>
+          <li>⚛️ React 19 & Vite (UI Portal)</li>
+          <li>🎨 Tailwind CSS (Daylight Clean Theme)</li>
+          <li>🗺️ Leaflet.js (India GIS Radar Map)</li>
+          <li>📉 Recharts (Sliding Window Series)</li>
+          <li>📧 SMTP / Email.MIME (Alert Service)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
