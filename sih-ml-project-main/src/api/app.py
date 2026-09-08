@@ -130,6 +130,52 @@ def trigger_simulate_anomaly(payload: Optional[SimulateAnomalyRequest] = Body(de
     result = STORE.simulate_anomaly(station_id=station_id, anomaly_type=anomaly_type)
     return result
 
+@app.get("/api/alerts/status")
+def get_alert_status():
+    """
+    Returns the current alert dispatcher configuration (recipient, SMTP configured, mode).
+    """
+    smtp_user = os.getenv("SMTP_USER", "").strip()
+    recipient = os.getenv("ALERT_RECIPIENT_EMAIL", "").strip()
+    return {
+        "configured": bool(smtp_user and recipient),
+        "smtp_server": os.getenv("SMTP_SERVER", "smtp.gmail.com"),
+        "sender_email": smtp_user if smtp_user else "Not set (simulation mode active)",
+        "recipient_email": recipient if recipient else "Not set (simulation mode active)",
+        "mode": "live_smtp" if (smtp_user and recipient) else "simulation"
+    }
+
+@app.post("/api/alerts/test")
+def test_alert_dispatch(payload: Optional[Dict[str, Any]] = Body(default=None)):
+    """
+    Manual test endpoint to verify email dispatching for a sample anomaly.
+    """
+    try:
+        from src.api.alert_service import send_email_alert
+    except ImportError:
+        try:
+            from api.alert_service import send_email_alert
+        except ImportError:
+            from alert_service import send_email_alert
+
+    station_id = payload.get("station_id", "AWS-SXR-11") if payload else "AWS-SXR-11"
+    sample_incident = {
+        "id": "AN-TEST-99",
+        "station": station_id,
+        "stationName": "Srinagar, Jammu & Kashmir",
+        "parameter": "Temperature",
+        "severity": "critical",
+        "confidence": 98.5,
+        "observed": 55.0,
+        "expected": 14.2,
+        "correction": 14.2,
+        "probableRootCause": "Sensor Spike / Transducer Malfunction",
+        "aiAssessment": "Test alert: ambient temperature jumped abruptly to 55.0°C exceeding maximum physical rate-of-change constraints.",
+        "recommendedAction": "Inspect temperature sensor cabling and verify calibration against baseline."
+    }
+    result = send_email_alert(sample_incident, force=True)
+    return result
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)

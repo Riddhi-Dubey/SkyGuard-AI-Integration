@@ -6,14 +6,21 @@ import AIInsight from "./AIInsight";
 import MaintenanceRisk from "./MaintenanceRisk";
 import { SHAP_CONTRIBUTIONS } from "../data/mockData";
 
-export default function AnomalyDetail({ detail, open, onClose }) {
+export default function AnomalyDetail({ detail, open, onClose, onAcceptCorrection }) {
   const [accepted, setAccepted] = useState(false);
 
   useEffect(() => {
     if (open) setAccepted(false);
-  }, [open]);
+  }, [open, detail?.id, detail?.station]);
 
   if (!detail) return null;
+
+  const handleAccept = () => {
+    setAccepted(true);
+    if (onAcceptCorrection) {
+      onAcceptCorrection(detail);
+    }
+  };
 
   const isNominal = detail.severity === "normal" || detail.observed === detail.expected || detail.correction === "No correction" || detail.correction === "No correction needed";
   const unit = detail.parameter === "Pressure" ? " hPa" : detail.parameter === "Humidity" ? "%" : "°C";
@@ -44,7 +51,7 @@ export default function AnomalyDetail({ detail, open, onClose }) {
             </div>
             <div className="mt-1 flex items-center gap-2.5">
               <h3 className="font-mono-num text-lg font-semibold text-white">{detail.station}</h3>
-              <StatusBadge status={detail.severity} pulse={!isNominal} />
+              <StatusBadge status={accepted ? "healthy" : detail.severity} pulse={!isNominal && !accepted} />
             </div>
           </div>
           <button
@@ -59,10 +66,10 @@ export default function AnomalyDetail({ detail, open, onClose }) {
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
           <div className="flex items-center gap-4 rounded-lg border border-line bg-base-900/60 p-4">
             <div className="text-[12px] text-ink-dim">
-              {isNominal ? "Confidence (Nominal)" : "Anomaly Confidence"}
+              {isNominal || accepted ? "Confidence (Nominal)" : "Anomaly Confidence"}
             </div>
-            <div className={`font-mono-num text-2xl font-semibold ${isNominal ? "text-signal-good" : "text-signal-bad"}`}>
-              {detail.confidence}%
+            <div className={`font-mono-num text-2xl font-semibold ${isNominal || accepted ? "text-signal-good" : "text-signal-bad"}`}>
+              {accepted ? "99.0%" : `${detail.confidence}%`}
             </div>
           </div>
 
@@ -70,10 +77,10 @@ export default function AnomalyDetail({ detail, open, onClose }) {
           <div>
             <h4 className="text-[13px] font-semibold text-white">Observed vs Expected</h4>
             <div className="mt-3 grid grid-cols-3 gap-3">
-              <div className={`rounded-lg border p-4 ${isNominal ? "border-line bg-base-900/60" : "border-signal-bad/30 bg-signal-bad/5"}`}>
+              <div className={`rounded-lg border p-4 ${isNominal || accepted ? "border-line bg-base-900/60" : "border-signal-bad/30 bg-signal-bad/5"}`}>
                 <div className="text-[11px] text-ink-faint">Observed {detail.parameter}</div>
-                <div className={`mt-1 font-mono-num text-xl font-semibold ${isNominal ? "text-white" : "text-signal-bad"}`}>
-                  {detail.observed}{unit}
+                <div className={`mt-1 font-mono-num text-xl font-semibold ${isNominal || accepted ? "text-white" : "text-signal-bad"}`}>
+                  {accepted ? `${detail.expected}${unit}` : `${detail.observed}${unit}`}
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-base-900/60 p-4">
@@ -91,7 +98,7 @@ export default function AnomalyDetail({ detail, open, onClose }) {
             </div>
             <div className="mt-3 flex items-center gap-2 rounded-md border border-line bg-base-900/40 px-3 py-2 text-[12px] text-ink-dim">
               <ShieldCheck size={14} className="shrink-0 text-atmos-300" />
-              {isNominal ? "Nominal telemetry — all sensors within learned operating baselines." : "Raw value preserved — the original observation is never overwritten."}
+              {isNominal || accepted ? "Nominal telemetry — all sensors within learned operating baselines." : "Raw value preserved — the original observation is never overwritten."}
             </div>
           </div>
 
@@ -126,23 +133,31 @@ export default function AnomalyDetail({ detail, open, onClose }) {
             </div>
 
             {!isNominal && (
-              <button
-                onClick={() => setAccepted(true)}
-                disabled={accepted}
-                className={`mt-5 flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-[13px] font-medium transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-atmos-400 ${
-                  accepted
-                    ? "cursor-default bg-signal-good/10 text-signal-good"
-                    : "bg-atmos-400 text-base-950 hover:bg-atmos-300"
-                }`}
-              >
-                {accepted ? (
-                  <>
-                    <CheckCircle2 size={15} /> Correction Noted
-                  </>
-                ) : (
-                  "Accept Correction"
+              <>
+                <button
+                  onClick={handleAccept}
+                  disabled={accepted}
+                  className={`mt-5 flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-[13px] font-medium transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-atmos-400 ${
+                    accepted
+                      ? "cursor-default bg-signal-good/15 text-signal-good border border-signal-good/30"
+                      : "bg-atmos-400 text-base-950 hover:bg-atmos-300"
+                  }`}
+                >
+                  {accepted ? (
+                    <>
+                      <CheckCircle2 size={16} /> Correction Accepted & Station Restored
+                    </>
+                  ) : (
+                    "Accept Correction"
+                  )}
+                </button>
+                {accepted && (
+                  <div className="mt-3 flex items-center gap-2 rounded-md border border-signal-good/30 bg-signal-good/10 px-3 py-2 text-[12px] text-signal-good">
+                    <CheckCircle2 size={14} className="shrink-0" />
+                    Correction verified by operator (HITL). Nominal baseline applied to live telemetry.
+                  </div>
                 )}
-              </button>
+              </>
             )}
             <p className="mt-2 text-center text-[11px] text-ink-faint">
               {isNominal ? "All telemetry parameters are operating within normal baseline limits." : "Correction is a recommendation. Original observation remains preserved."}

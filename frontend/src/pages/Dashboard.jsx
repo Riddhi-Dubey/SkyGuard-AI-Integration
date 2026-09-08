@@ -187,6 +187,60 @@ export default function Dashboard() {
     setPanelOpen(true);
   };
 
+  // Handle Human-in-the-Loop (HITL) Correction Acceptance
+  const handleAcceptCorrection = (detail) => {
+    if (!detail) return;
+    const stnId = detail.station;
+    const rawVal = detail.expected !== undefined ? detail.expected : 24.6;
+    const correctedVal = typeof rawVal === "number" ? rawVal : parseFloat(String(rawVal).replace(/[^\d.-]/g, ""));
+
+    // 1. Update station state to restore nominal telemetry & health
+    setStations((prev) =>
+      prev.map((s) => {
+        if (s.id === stnId) {
+          const updated = { ...s, status: "healthy", health: Math.min(100, (s.health || 80) + 16) };
+          if (detail.parameter === "Temperature") updated.temp = correctedVal;
+          else if (detail.parameter === "Pressure") updated.pressure = correctedVal;
+          else if (detail.parameter === "Humidity") updated.humidity = correctedVal;
+          return updated;
+        }
+        return s;
+      })
+    );
+
+    // 2. Remove / resolve anomaly from active list
+    setAnomalyList((prev) => prev.filter((a) => a.station !== stnId && a.id !== detail.id));
+    setActiveAnomalies((prev) => Math.max(0, prev - 1));
+
+    // 3. Update selected anomaly modal data to reflect nominal status
+    setSelectedAnomaly((prev) => prev ? {
+      ...prev,
+      observed: correctedVal,
+      expected: correctedVal,
+      severity: "normal",
+      correction: "No correction",
+      probableRootCause: "Nominal Baseline Restored (Operator HITL Action)"
+    } : null);
+
+    // 4. Trigger positive confirmation toast
+    const id = ++toastIdRef.current;
+    const unit = detail.parameter === "Pressure" ? " hPa" : detail.parameter === "Humidity" ? "%" : "°C";
+    setToasts((prev) => [
+      ...prev,
+      {
+        id,
+        isSuccess: true,
+        title: "Telemetry Correction Applied",
+        station: stnId,
+        parameter: `✅ Baseline restored to ${correctedVal}${unit}`,
+        confidence: 99.0
+      }
+    ]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 6000);
+  };
+
   // Interactive Anomaly Simulation
   const handleSimulateAnomaly = async () => {
     setIsSimulating(true);
@@ -230,10 +284,19 @@ export default function Dashboard() {
       }
 
       const id = ++toastIdRef.current;
-      setToasts((prev) => [...prev, { id, station: targetStation.id, parameter: "Temperature", confidence: 98.5 }]);
+      setToasts((prev) => [
+        ...prev,
+        {
+          id,
+          title: "Critical Anomaly Injected",
+          station: targetStation.id,
+          parameter: "Spike (55.0°C) • Email Alert Dispatched",
+          confidence: 98.5
+        }
+      ]);
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
+      }, 6000);
     } catch (err) {
       console.error("Simulation error:", err);
     } finally {
@@ -605,7 +668,12 @@ export default function Dashboard() {
         </main>
       </div>
 
-      <AnomalyDetail detail={selectedAnomaly} open={panelOpen} onClose={() => setPanelOpen(false)} />
+      <AnomalyDetail
+        detail={selectedAnomaly}
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        onAcceptCorrection={handleAcceptCorrection}
+      />
       <Toast toasts={toasts} onDismiss={dismissToast} />
     </div>
   );

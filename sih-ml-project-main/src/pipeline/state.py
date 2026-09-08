@@ -34,6 +34,8 @@ class AnomalyFrontendContract(TypedDict):
     probableRootCause: str
     recommendedAction: str
     maintenanceRisk: MaintenanceRisk
+    alertDispatched: Optional[bool]
+    alertStatus: Optional[str]
 
 class PipelineAgentState(TypedDict, total=False):
     # ----------------------------------------------------
@@ -86,6 +88,12 @@ class PipelineAgentState(TypedDict, total=False):
     maintenance_reason: str
 
     # ----------------------------------------------------
-    # 7. Final Assembled Frontend Contract
+    # 7. Node 6: Alert Dispatch Outputs
+    # ----------------------------------------------------
+    alert_dispatched: bool
+    alert_status: str
+
+    # ----------------------------------------------------
+    # 8. Final Assembled Frontend Contract
     # ----------------------------------------------------
     final_output: AnomalyFrontendContract
