@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyGuard AI — Tech Stack Card (Canva & PPT Ready)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+    
+    body {
+      background-color: #0f172a;
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      color: #f8fafc;
+    }
+
+    /* Target Canva / PPT Card Container */
+    #tech-stack-card {
+      width: 460px;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 20px;
+      padding: 28px 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1.5px solid #e2e8f0;
+      box-sizing: border-box;
+    }
+
+    .card-title {
+      font-size: 21px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .title-line {
+      height: 3px;
+      background: #0284c7;
+      border-radius: 3px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .stack-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stack-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+      color: #334155;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .stack-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .icon-badge {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .item-text strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .item-text span {
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .action-bar {
+      margin-top: 30px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+    }
+
+    .btn-primary {
+      background: #0284c7;
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #0369a1;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      box-shadow: none;
+    }
+    .btn-secondary:hover {
+      background: #334155;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+  <!-- Instructions Header -->
+  <div class="text-center mb-8 max-w-xl">
+    <span class="px-3 py-1 text-xs font-bold font-mono bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-full mb-3 inline-block">
+      CANVA & PPT READY CARD
+    </span>
+    <h1 class="text-2xl font-black tracking-tight text-white mb-2">SkyGuard AI — Tech Stack Box</h1>
+    <p class="text-sm text-slate-400">Matching your exact Canva presentation card design with updated technology stack items.</p>
+  </div>
+
+  <!-- CANVA / PPT CARD -->
+  <div id="tech-stack-card">
+    <div class="card-title">Tech Stack Used:</div>
+    <div class="title-line"></div>
+
+    <div class="stack-list">
+      <div class="stack-item">
+        <div class="icon-badge">🐍</div>
+        <div class="item-text"><strong>Python 3.12</strong> <span>(Core ML & Engine)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">🌲</div>
+        <div class="item-text"><strong>Scikit-Learn</strong> <span>(Isolation Forest)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">📊</div>
+        <div class="item-text"><strong>SHAP</strong> <span>(Feature Attribution)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">🧠</div>
+        <div class="item-text"><strong>LangGraph</strong> <span>(Stateful Agentic Graph)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">⚡</div>
+        <div class="item-text"><strong>OpenAI via Groq API</strong> <span>(Root-Cause LLM)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">🚀</div>
+        <div class="item-text"><strong>FastAPI & Uvicorn</strong> <span>(Streaming API)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">📈</div>
+        <div class="item-text"><strong>NumPy & Pandas</strong> <span>(Rolling Features)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">⚛️</div>
+        <div class="item-text"><strong>React 19 & Vite</strong> <span>(UI Portal)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">🎨</div>
+        <div class="item-text"><strong>Tailwind CSS</strong> <span>(Daylight Clean Theme)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">🗺️</div>
+        <div class="item-text"><strong>Leaflet.js</strong> <span>(India GIS Radar Map)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">📉</div>
+        <div class="item-text"><strong>Recharts</strong> <span>(Sliding Window Series)</span></div>
+      </div>
+
+      <div class="stack-item">
+        <div class="icon-badge">✉️</div>
+        <div class="item-text"><strong>SMTP / Netlify Functions</strong> <span>(Alert Service)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="action-bar">
+    <button onclick="downloadPNG()" class="btn btn-primary">
+      📥 Download High-Res PNG (For Canva / PPT)
+    </button>
+    <button onclick="copyImage()" class="btn btn-secondary">
+      📋 Copy Card Image to Clipboard
+    </button>
+  </div>
+
+  <script>
+    function downloadPNG() {
+      const card = document.getElementById('tech-stack-card');
+      html2canvas(card, {
+        scale: 3, // 3x ultra-sharp resolution for Canva & PPT
+        backgroundColor: null,
+        useCORS: true
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'SkyGuard_AI_Tech_Stack_Card.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    function copyImage() {
+      const card = document.getElementById('tech-stack-card');
+      html2canvas(card, { scale: 3, backgroundColor: null }).then(canvas => {
+        canvas.toBlob(blob => {
+          try {
+            navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            alert('✅ Tech Stack Card image copied to clipboard! Press Ctrl+V in Canva or PowerPoint.');
+          } catch (err) {
+            downloadPNG();
+          }
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
