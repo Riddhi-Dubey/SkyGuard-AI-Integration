@@ -126,6 +126,7 @@
 
 * **WMO-No. 8 (World Meteorological Organization):** *Guide to Meteorological Instruments and Methods of Observation.*
 * **India Meteorological Department (IMD):** *AWS Network Guidelines and Quality Assurance Protocols.*
+* **Empirical Baseline & Calibration Dataset:** *Historical Indian Surface Synoptic Telemetry Observations Dataset (Multi-Year Synoptic Weather Benchmark via Kaggle / Open Data Repository).*
 * **Liu, Ting & Zhou (2008):** *Isolation Forest.* IEEE ICDM.
 * **Lundberg & Lee (2017):** *A Unified Approach to Interpreting Model Predictions (SHAP).* NeurIPS.
 * **LangChain & LangGraph (2024–2026):** *Stateful Multi-Agent Workflows.*

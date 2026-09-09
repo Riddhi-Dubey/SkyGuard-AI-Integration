@@ -268,9 +268,10 @@ sequenceDiagram
 
 1. **World Meteorological Organization (WMO):** *Guide to Instruments and Methods of Observation (WMO-No. 8), Volume I — Measurement of Meteorological Variables.*
 2. **India Meteorological Department (IMD):** *Standard Operating Procedures for AWS Network Management and Surface Telemetry Quality Assurance.*
-3. **Liu, F. T., Ting, K. M., & Zhou, Z. H. (2008):** *Isolation Forest.* IEEE International Conference on Data Mining (ICDM).
-4. **Lundberg, S. M., & Lee, S. I. (2017):** *A Unified Approach to Interpreting Model Predictions (SHAP).* Neural Information Processing Systems (NeurIPS).
-5. **LangGraph Multi-Agent Architecture (2024–2026):** *Stateful Cyclic Execution for Autonomous Diagnostic Systems.*
+3. **Empirical Baseline & Calibration Dataset:** *Historical Multi-Station Indian Surface Meteorological Observations Benchmark (Multi-Year Synoptic Weather Dataset via Kaggle / Open Data Repository).*
+4. **Liu, F. T., Ting, K. M., & Zhou, Z. H. (2008):** *Isolation Forest.* IEEE International Conference on Data Mining (ICDM).
+5. **Lundberg, S. M., & Lee, S. I. (2017):** *A Unified Approach to Interpreting Model Predictions (SHAP).* Neural Information Processing Systems (NeurIPS).
+6. **LangGraph Multi-Agent Architecture (2024–2026):** *Stateful Cyclic Execution for Autonomous Diagnostic Systems.*
 
 ---
 
