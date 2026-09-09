@@ -191,48 +191,50 @@ export default function Dashboard() {
   const handleAcceptCorrection = (detail) => {
     if (!detail) return;
     const stnId = detail.station;
-    const rawVal = detail.expected !== undefined ? detail.expected : 24.6;
+    const rawVal = detail.correction !== undefined ? detail.correction : (detail.expected !== undefined ? detail.expected : 24.6);
     const correctedVal = typeof rawVal === "number" ? rawVal : parseFloat(String(rawVal).replace(/[^\d.-]/g, ""));
+    const unit = detail.parameter === "Pressure" ? " hPa" : detail.parameter === "Humidity" ? "%" : "°C";
 
-    // 1. Update station state to restore nominal telemetry & health
+    // 1. Update station health and QC state (preserve raw observed telemetry)
     setStations((prev) =>
       prev.map((s) => {
         if (s.id === stnId) {
-          const updated = { ...s, status: "healthy", health: Math.min(100, (s.health || 80) + 16) };
-          if (detail.parameter === "Temperature") updated.temp = correctedVal;
-          else if (detail.parameter === "Pressure") updated.pressure = correctedVal;
-          else if (detail.parameter === "Humidity") updated.humidity = correctedVal;
-          return updated;
+          return {
+            ...s,
+            status: "healthy",
+            health: Math.min(100, (s.health || 80) + 16),
+            // Note: raw observed readings (s.temp / s.pressure / s.humidity) remain preserved as ground truth
+          };
         }
         return s;
       })
     );
 
-    // 2. Remove / resolve anomaly from active list
-    setAnomalyList((prev) => prev.filter((a) => a.station !== stnId && a.id !== detail.id));
+    // 2. Remove / resolve anomaly from active list count
     setActiveAnomalies((prev) => Math.max(0, prev - 1));
 
-    // 3. Update selected anomaly modal data to reflect nominal status
+    // 3. Update selected anomaly modal state — PRESERVE OBSERVED READING
     setSelectedAnomaly((prev) => prev ? {
       ...prev,
-      observed: correctedVal,
-      expected: correctedVal,
-      severity: "normal",
-      correction: "No correction",
-      probableRootCause: "Nominal Baseline Restored (Operator HITL Action)"
+      isAccepted: true,
+      observed: detail.observed, // PRESERVE RAW OBSERVED VALUE
+      expected: detail.expected,
+      correction: correctedVal,
+      correctionLabel: "Accepted Correction",
+      severity: "healthy",
+      probableRootCause: prev.probableRootCause || "Nominal Baseline Restored (Operator HITL Action)"
     } : null);
 
     // 4. Trigger positive confirmation toast
     const id = ++toastIdRef.current;
-    const unit = detail.parameter === "Pressure" ? " hPa" : detail.parameter === "Humidity" ? "%" : "°C";
     setToasts((prev) => [
       ...prev,
       {
         id,
         isSuccess: true,
-        title: "Telemetry Correction Applied",
+        title: "Correction Accepted (HITL)",
         station: stnId,
-        parameter: `✅ Baseline restored to ${correctedVal}${unit}`,
+        parameter: `✅ Attribute set to Accepted Correction (${correctedVal}${unit}). Raw observed telemetry preserved.`,
         confidence: 99.0
       }
     ]);
