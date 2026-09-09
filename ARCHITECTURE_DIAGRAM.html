@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyGuard AI — End-to-End System Architecture</title>
+  <!-- Mermaid JS -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+    .mermaid svg {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      background-color: #ffffff;
+      padding: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen p-6 flex flex-col items-center justify-center">
+
+  <div class="max-w-6xl w-full">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-slate-900/80 border border-slate-800 p-6 rounded-2xl backdrop-blur-md">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2.5 py-0.5 text-xs font-bold font-mono bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-full">SIH PS 26073</span>
+          <span class="px-2.5 py-0.5 text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">IMD / MoES</span>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-white">SkyGuard AI — End-to-End System Architecture</h1>
+        <p class="text-sm text-slate-400">Horizontal High-Resolution Architecture for PowerPoint & Documentation</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="btn-png" onclick="downloadPNG()" class="px-4 py-2 text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white rounded-lg shadow-md transition-all flex items-center gap-2">
+          📥 Download High-Res PNG
+        </button>
+        <button id="btn-svg" onclick="downloadSVG()" class="px-4 py-2 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg transition-all flex items-center gap-2">
+          🖼️ Download Vector SVG
+        </button>
+      </div>
+    </div>
+
+    <!-- Diagram Container -->
+    <div id="diagram-wrapper" class="bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 mb-6 overflow-x-auto">
+      <div class="mermaid">
+flowchart LR
+    subgraph S1["1. Telemetry Ingest"]
+        direction TB
+        A1["📡 AWS Synoptic Nodes\n(Pt100, PTB330, HMP155)"]
+        A2["🛰️ INSAT-3DR Satellite\n(402.75 MHz DCP Burst / 4G)"]
+        A3["⚡ FastAPI Gateway\n(<15ms Async Ingestion)"]
+        A1 --> A2 --> A3
+    end
+
+    subgraph S2["2. Physics & Features"]
+        direction TB
+        B1["🧪 12-D Synoptic Vector\n(Gradients Δt, Volatility σ, Dew Pt)"]
+        B2{"⚙️ WMO-No. 8 Physics Gate\n(|ΔT/Δt| ≤ 5°C/10min\nFlatline σ > 0)"}
+        B1 --> B2
+    end
+
+    subgraph S3["3. Isolation Forest ML"]
+        direction TB
+        C1["🤖 12D Isolation Forest\n(Multivariate Microclimate)"]
+        C2{"Outlier Flagged?\n(Score ≤ 0.0)"}
+        C1 --> C2
+    end
+
+    subgraph S4["4. LangGraph + OpenAI"]
+        direction TB
+        D1["📊 SHAP Attribution (%)"]
+        D2["🛡️ Non-Destructive Baseline\n(Preserves Raw Telemetry)"]
+        D3["🧠 OpenAI Model (via Groq)\n(Root-Cause & Field Action)"]
+        D1 --> D2 --> D3
+    end
+
+    subgraph S5["5. Actionable Outputs"]
+        direction TB
+        E1["📧 Plain-Text Email Alert\n(Dispatched to Field Crew)"]
+        E2["🖥️ Live GIS Dashboard\n(HITL Operator Review)"]
+        E3["🗄️ Clean Telemetry Feed\n(NWP Weather Models)"]
+        E1 --- E2 --- E3
+    end
+
+    A3 --> B1
+    B2 -- "Physics Breach" --> D1
+    B2 -- "Plausible" --> C1
+    C2 -- "Anomalous" --> D1
+    C2 -- "Nominal" --> E3
+    D3 --> E1
+    D3 --> E2
+
+    style S1 fill:#f0f9ff,stroke:#0284c7,stroke-width:2px;
+    style S2 fill:#fef3c7,stroke:#d97706,stroke-width:2px;
+    style S3 fill:#f0fdf4,stroke:#16a34a,stroke-width:2px;
+    style S4 fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px;
+    style S5 fill:#ecfdf5,stroke:#059669,stroke-width:2px;
+      </div>
+    </div>
+
+    <!-- Instructions / Footer -->
+    <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl text-xs text-slate-400 flex items-center justify-between">
+      <span>💡 <strong>PowerPoint Tip:</strong> Click <em>"Download High-Res PNG"</em> to save this image directly into your presentation folder.</span>
+      <a href="https://mermaid.live" target="_blank" class="text-sky-400 hover:underline">Open in Mermaid Live Editor ↗</a>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      flowchart: {
+        curve: 'basis',
+        htmlLabels: true
+      }
+    });
+
+    function downloadSVG() {
+      const svg = document.querySelector('.mermaid svg');
+      if (!svg) return alert('Diagram not ready yet');
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'SkyGuard_AI_Architecture.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function downloadPNG() {
+      const svg = document.querySelector('.mermaid svg');
+      if (!svg) return alert('Diagram not ready yet');
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = function () {
+        const scale = 2; // 2x for high resolution
+        canvas.width = (svg.clientWidth || 1200) * scale;
+        canvas.height = (svg.clientHeight || 500) * scale;
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+
+        const pngUrl = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = pngUrl;
+        a.download = 'SkyGuard_AI_Architecture.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+  </script>
+</body>
+</html>
