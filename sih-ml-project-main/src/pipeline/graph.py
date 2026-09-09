@@ -70,28 +70,13 @@ def process_flagged_reading(
     reading: Dict[str, Any],
     ml_output: Dict[str, Any],
     history_readings: Optional[List[Dict[str, Any]]] = None,
-    incident_id: Optional[str] = None
+    incident_id: Optional[str] = None,
+    force_alert: bool = False
 ) -> Dict[str, Any]:
     """
     Primary interface for backend / FastAPI ingestion layer.
     Takes a single flagged weather station reading, historical readings, and the ML model output,
     executes the LangGraph pipeline, and returns the complete frontend contract dictionary.
-
-    Parameters:
-    -----------
-    reading : dict
-        Current observation containing temp, pressure, humidity, timestamp, station_id.
-    ml_output : dict
-        Output from predict_anomaly_with_history (status, prediction, anomaly_score, rule_violation, shap_contributions).
-    history_readings : list of dicts, optional
-        Chronological list of prior readings.
-    incident_id : str, optional
-        Custom incident identifier (e.g. "AN-10231"). Defaults to generated ID.
-
-    Returns:
-    --------
-    dict
-        Structured anomaly object matching the frontend AnomalyDetail contract.
     """
     graph = get_compiled_graph()
     
@@ -107,6 +92,7 @@ def process_flagged_reading(
         "station_id": station_id,
         "station_name": station_name,
         "timestamp": timestamp,
+        "force_alert": force_alert,
         "current_reading": reading,
         "history_readings": history_readings or [],
         "ml_output": ml_output

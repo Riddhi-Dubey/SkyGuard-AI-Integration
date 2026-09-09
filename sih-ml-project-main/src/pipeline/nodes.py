@@ -438,7 +438,8 @@ def alert_dispatch_node(state: PipelineAgentState) -> Dict[str, Any]:
         except ImportError:
             from alert_service import send_email_alert
 
-    result = send_email_alert(final_output)
+    force_alert = bool(state.get("force_alert", False))
+    result = send_email_alert(final_output, force=force_alert)
     dispatched = result.get("status") in ("delivered", "simulated_success")
     status_str = result.get("status", "unknown")
 

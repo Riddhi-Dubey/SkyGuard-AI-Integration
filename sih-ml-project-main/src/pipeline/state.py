@@ -45,6 +45,7 @@ class PipelineAgentState(TypedDict, total=False):
     station_id: str
     station_name: str
     timestamp: str
+    force_alert: bool
     current_reading: Dict[str, Any]
     history_readings: List[Dict[str, Any]]
     ml_output: Dict[str, Any]
