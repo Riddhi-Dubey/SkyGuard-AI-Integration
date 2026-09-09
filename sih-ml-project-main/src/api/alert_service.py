@@ -29,9 +29,9 @@ _COOLDOWN_LOCK = threading.Lock()
 DEFAULT_COOLDOWN_SECONDS = int(os.getenv("ALERT_COOLDOWN_SECONDS", "180"))
 
 
-def generate_alert_html(incident: Dict[str, Any]) -> str:
+def generate_alert_text(incident: Dict[str, Any]) -> str:
     """
-    Generates a dark-themed responsive HTML email report for the incident.
+    Generates a clean, structured Plain Text meteorological report for the incident.
     """
     station_id = incident.get("station", "AWS-UNKNOWN")
     station_name = incident.get("stationName", "Weather Station")
@@ -45,183 +45,55 @@ def generate_alert_html(incident: Dict[str, Any]) -> str:
     ai_assessment = incident.get("aiAssessment", "Anomalous reading detected outside expected baseline.")
     recommended_action = incident.get("recommendedAction", "Inspect sensor transducer and calibration.")
     timestamp = datetime.now().strftime("%d %b %Y, %H:%M:%S IST")
-
     unit = "°C" if parameter == "Temperature" else " hPa" if parameter == "Pressure" else "%"
-    
-    badge_bg = "#dc2626" if severity == "CRITICAL" else "#d97706"
-    badge_text = "#ffffff"
 
-    return f"""<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkyGuard AI — Telemetry Alert</title>
-  <style>
-    body {{
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #090d16;
-      color: #e2e8f0;
-      margin: 0;
-      padding: 24px;
-    }}
-    .container {{
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }}
-    .header {{
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      padding: 24px;
-      border-bottom: 1px solid #1e293b;
-    }}
-    .logo {{
-      font-size: 13px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #38bdf8;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }}
-    .title {{
-      font-size: 20px;
-      font-weight: 700;
-      color: #ffffff;
-      margin: 0 0 12px 0;
-    }}
-    .badge {{
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      background-color: {badge_bg};
-      color: {badge_text};
-    }}
-    .content {{
-      padding: 24px;
-    }}
-    .card {{
-      background-color: #1e293b;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-      border: 1px solid #334155;
-    }}
-    .card-title {{
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #94a3b8;
-      margin-bottom: 12px;
-      font-weight: 600;
-    }}
-    .grid {{
-      display: table;
-      width: 100%;
-    }}
-    .col {{
-      display: table-cell;
-      width: 33.33%;
-      text-align: center;
-      padding: 8px;
-    }}
-    .metric-label {{
-      font-size: 11px;
-      color: #94a3b8;
-      margin-bottom: 4px;
-    }}
-    .metric-value {{
-      font-size: 18px;
-      font-weight: 700;
-      font-family: monospace;
-    }}
-    .val-observed {{ color: #f87171; }}
-    .val-expected {{ color: #ffffff; }}
-    .val-corrected {{ color: #4ade80; }}
-    .section-title {{
-      font-size: 14px;
-      font-weight: 600;
-      color: #38bdf8;
-      margin: 16px 0 8px 0;
-    }}
-    .text-body {{
-      font-size: 13px;
-      line-height: 1.6;
-      color: #cbd5e1;
-      margin: 0 0 12px 0;
-    }}
-    .action-box {{
-      background-color: rgba(56, 189, 248, 0.1);
-      border-left: 4px solid #38bdf8;
-      padding: 12px 16px;
-      border-radius: 0 8px 8px 0;
-      margin-top: 16px;
-    }}
-    .footer {{
-      background-color: #0b1120;
-      padding: 16px 24px;
-      border-top: 1px solid #1e293b;
-      text-align: center;
-      font-size: 11px;
-      color: #64748b;
-    }}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">SkyGuard AI &bull; Meteorological Early Warning</div>
-      <h1 class="title">{station_name} ({station_id})</h1>
-      <span class="badge">{severity} ANOMALY &bull; {confidence}% CONFIDENCE</span>
-    </div>
+    try:
+        obs_f = float(str(observed).replace("°C", "").replace("%", "").replace("hPa", "").strip())
+        exp_f = float(str(expected).replace("°C", "").replace("%", "").replace("hPa", "").strip())
+        diff_str = f"+{(obs_f - exp_f):.1f}{unit} deviation"
+    except Exception:
+        diff_str = f"Deviation flagged against {expected}{unit} baseline"
 
-    <div class="content">
-      <div class="card">
-        <div class="card-title">Telemetry Discrepancy &bull; {parameter}</div>
-        <div class="grid">
-          <div class="col">
-            <div class="metric-label">Observed</div>
-            <div class="metric-value val-observed">{observed}{unit}</div>
-          </div>
-          <div class="col">
-            <div class="metric-label">Expected Baseline</div>
-            <div class="metric-value val-expected">{expected}{unit}</div>
-          </div>
-          <div class="col">
-            <div class="metric-label">Suggested Correction</div>
-            <div class="metric-value val-corrected">{correction}{unit}</div>
-          </div>
-        </div>
-      </div>
+    return f"""======================================================================
+         SKYGUARD AI — METEOROLOGICAL EARLY WARNING ALERT
+                 MINISTRY OF EARTH SCIENCES / IMD
+======================================================================
 
-      <div class="section-title">AI Root Cause Diagnostics</div>
-      <p class="text-body"><strong>Probable Cause:</strong> {root_cause}</p>
-      <p class="text-body">{ai_assessment}</p>
+ALERT LEVEL:      {severity} ANOMALY (Confidence: {confidence}%)
+STATION ID:       {station_id}
+STATION NAME:     {station_name}
+PARAMETER:        {parameter}
+TIMESTAMP (IST):  {timestamp}
 
-      <div class="action-box">
-        <div style="font-weight: 600; font-size: 12px; color: #38bdf8; margin-bottom: 4px;">RECOMMENDED FIELD ACTION</div>
-        <div style="font-size: 13px; color: #e2e8f0;">{recommended_action}</div>
-      </div>
-    </div>
+----------------------------------------------------------------------
+TELEMETRY METRICS
+----------------------------------------------------------------------
+• Observed Reading:      {observed}{unit}  [FLAGGED ANOMALOUS]
+• Expected Baseline:     {expected}{unit}
+• Suggested Correction:  {correction}{unit}
+• Telemetry Discrepancy: {diff_str}
 
-    <div class="footer">
-      Generated automatically by SkyGuard AI Agentic Pipeline at {timestamp}<br>
-      SIH 2026 Problem Statement 26073 &bull; Ministry of Earth Sciences (IMD)
-    </div>
-  </div>
-</body>
-</html>"""
+----------------------------------------------------------------------
+AI ROOT CAUSE DIAGNOSTICS
+----------------------------------------------------------------------
+• Probable Root Cause:   {root_cause}
+• Physical Evaluation:   {ai_assessment}
+• WMO QC Compliance:     FAILED (WMO-No. 8 Range & Step Limit Checks)
+
+----------------------------------------------------------------------
+RECOMMENDED FIELD ACTION
+----------------------------------------------------------------------
+{recommended_action}
+
+======================================================================
+Generated automatically by SkyGuard AI Agentic Pipeline
+SIH 2026 Problem Statement 26073 • Ministry of Earth Sciences (IMD)
+======================================================================"""
 
 
 def send_email_alert(incident: Dict[str, Any], force: bool = False) -> Dict[str, Any]:
     """
-    Sends an automated email alert for the given incident.
+    Sends an automated email alert for the given incident in Plain Text format.
     
     If SMTP credentials are not configured, runs in Safe Simulation Mode
     and prints the formatted incident alert to console.
@@ -255,7 +127,7 @@ def send_email_alert(incident: Dict[str, Any], force: bool = False) -> Dict[str,
     recipient_email = os.getenv("ALERT_RECIPIENT_EMAIL", "").strip()
 
     subject = f"[{severity} ALERT] {station_id} ({station_name}) {parameter} Anomaly Detected"
-    html_body = generate_alert_html(incident)
+    text_body = generate_alert_text(incident)
 
     # If credentials are not provided, log simulated email dispatch
     if not smtp_user or not smtp_password or not recipient_email:
@@ -274,13 +146,12 @@ def send_email_alert(incident: Dict[str, Any], force: bool = False) -> Dict[str,
             "message": "Alert simulated successfully. Set SMTP credentials in .env to deliver live emails."
         }
 
-    # Live SMTP Dispatch
+    # Live SMTP Dispatch in Plain Text
     try:
-        msg = MIMEMultipart("alternative")
+        msg = MIMEText(text_body, "plain", "utf-8")
         msg["Subject"] = subject
         msg["From"] = f"SkyGuard AI Alerts <{smtp_user}>"
         msg["To"] = recipient_email
-        msg.attach(MIMEText(html_body, "html"))
 
         with smtplib.SMTP(smtp_server, smtp_port, timeout=10) as server:
             server.ehlo()
@@ -288,7 +159,7 @@ def send_email_alert(incident: Dict[str, Any], force: bool = False) -> Dict[str,
             server.login(smtp_user, smtp_password)
             server.sendmail(smtp_user, [recipient_email], msg.as_string())
 
-        print(f"[SkyGuard Alert] Live email alert successfully delivered to {recipient_email} for {station_id}")
+        print(f"[SkyGuard Alert] Live plain text email alert successfully delivered to {recipient_email} for {station_id}")
         return {
             "status": "delivered",
             "station_id": station_id,
