@@ -49,37 +49,29 @@
 
 ## 📌 SLIDE 2: Technical Approach
 
-### **[ Right Card: Tech Stack Used ]**
-* **Python 3.12** (Core ML & Backend Architecture)
-* **Scikit-Learn** (Isolation Forest Unsupervised Model)
-* **SHAP** (Shapley Additive Feature Explainability)
-* **LangGraph** (Stateful Agentic Directed Acyclic Graph)
-* **LangChain & Groq API** (Llama-3.3 / GPT-OSS 120B)
-* **FastAPI & Uvicorn** (Asynchronous High-Throughput REST API)
-* **NumPy & Pandas** (Rolling Volatility & $\Delta t$ Feature Engineering)
-* **React 19 & Vite** (Frontend Interactive Dashboard)
-* **Tailwind CSS** (Daylight Clean Theme & Glassmorphism)
-* **Leaflet.js** (India Geospatial Radar Map & GIS Layers)
-* **Recharts** (60-Minute Sliding Window Telemetry Series)
-* **SMTP / Email.MIME** (Automated Diagnostic Dispatcher)
+### **[ TOP HALF: Horizontal End-to-End System Flow ]**
+```text
+┌─────────────────────────┐     ┌─────────────────────────┐     ┌─────────────────────────┐     ┌─────────────────────────┐     ┌─────────────────────────┐
+│ 1. Telemetry Ingestion  │ ──► │ 2. Physics & Features   │ ──► │  3. ML Detection (IF)   │ ──► │ 4. LangGraph + OpenAI   │ ──► │  5. Actionable Outputs  │
+├─────────────────────────┤     ├─────────────────────────┤     ├─────────────────────────┤     ├─────────────────────────┤     ├─────────────────────────┤
+│ • Pt100 / PTB330 / HMP  │     │ • 12-D Synoptic Vector  │     │ • 12D Isolation Forest  │     │ • SHAP Attribution (%)  │     │ • Plain-Text Email Alert│
+│ • INSAT-3DR (402.75MHz) │     │ • WMO-No. 8 Range Check │     │ • Microclimate Baseline │     │ • Non-Destructive Corr  │     │ • Live GIS Dashboard    │
+│ • FastAPI (<15ms stream)│     │ • Step ΔT ≤ 5°C/10min   │     │ • Sub-15ms Scoring      │     │ • OpenAI via Groq API   │     │ • HITL Operator Review  │
+└─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘
+```
 
 ---
 
-### **[ Diagram 1: System Architecture ]**
-```text
-[AWS Stations (10-min Stream)] ➔ [FastAPI Streaming Gateway & In-Memory Buffers]
-                                            ↓
-               [Stage 1: Physics Engine (ΔT > 5°C/10min, σ=0 Flatline)]
-                                            ↓
-               [Stage 2: Isolation Forest Model (12-D Engineered Features)]
-                                            ↓ (Flagged)
-               [LangGraph 6-Node State Machine: Calibration -> SHAP -> Correction -> LLM]
-                                            ↓
-          ┌─────────────────────────────────┴─────────────────────────────────┐
-          ↓                                                                   ↓
-[Autonomous Email Dispatcher]                                   [React Dashboard + GIS Map]
-(HTML Report & 180s Cooldown)                                   (Human-in-the-Loop Correction)
-```
+### **[ BOTTOM HALF: Structured Technology Stack Table ]**
+
+| Architectural Layer | Technologies Used | Key Role & Functionality |
+| :--- | :--- | :--- |
+| **Telemetry Ingestion & Gateway** | **FastAPI, Uvicorn, Python 3.10** | High-throughput async ingestion buffer (<15ms latency per AWS station) |
+| **Physics & Feature Engineering** | **NumPy, Pandas, WMO-No. 8 Standard** | 12-D vector extraction, thermodynamic step-change & flatline gradient checks |
+| **Machine Learning Core** | **Scikit-Learn (Isolation Forest), SHAP** | Unsupervised multivariate outlier detection & mathematical game-theoretic attribution |
+| **Agentic Diagnostics & GenAI** | **LangGraph, OpenAI Model (via Groq API)** | 6-Node state machine for root-cause synthesis & prescriptive field maintenance instructions |
+| **User Interface & GIS** | **React 19, Vite, Tailwind CSS, Leaflet.js** | Live Indian AWS surveillance grid, 60-min sliding series & Human-in-the-Loop drawer |
+| **Alerting & Cloud Deployment** | **Netlify Edge Functions, Gmail SMTP** | Automated plain-text email dispatches to field engineers with 180s anti-spam cooldown |
 
 ---
 

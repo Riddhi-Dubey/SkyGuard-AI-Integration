@@ -215,25 +215,29 @@ sequenceDiagram
 
 ## 📌 SLIDE 2: Technical Approach & Architecture
 
-### **Left Column: Technical Flow & Data Pipeline**
-1. **Telemetry Ingestion Layer:** Ingests 10-minute DCP bursts over INSAT-3DR (402.75 MHz) and 4G GPRS.
-2. **Feature Engineering (12-D Vector):**
-   * Instantaneous readings: $T, P, RH$
-   * Rolling rates of change: $\Delta T_{10\text{min}}, \Delta P_{10\text{min}}, \Delta RH_{10\text{min}}$
-   * 1-Hour Rolling Volatility: $\sigma(T), \sigma(P), \sigma(RH)$
-   * Atmospheric relations: Dew point depression $(T - T_d)$, diurnal cyclical components ($\sin(\text{hour}), \cos(\text{hour})$).
-3. **Two-Tier Quality Control:**
-   * *Tier 1 (Deterministic):* WMO-No. 8 physical limits and gradient constraints.
-   * *Tier 2 (Statistical):* 12-Dimensional Isolation Forest scoring multivariate microclimates.
-4. **Agentic Diagnostic State Machine:** 6-Node LangGraph workflow executes confidence calibration, SHAP calculation, temporal interpolation, GenAI diagnosis, and alert dispatch.
-5. **Human-in-the-Loop (HITL) Dashboard:** Interactive React 19 GIS dashboard with 60-minute sliding window charts and 1-click correction validation.
+### **[ TOP SECTION: Horizontal End-to-End Pipeline Architecture ]**
+```text
+┌─────────────────────────┐     ┌─────────────────────────┐     ┌─────────────────────────┐     ┌─────────────────────────┐     ┌─────────────────────────┐
+│ 1. Telemetry Ingestion  │ ──► │ 2. Physics & Features   │ ──► │  3. ML Detection (IF)   │ ──► │ 4. LangGraph + OpenAI   │ ──► │  5. Actionable Outputs  │
+├─────────────────────────┤     ├─────────────────────────┤     ├─────────────────────────┤     ├─────────────────────────┤     ├─────────────────────────┤
+│ • Pt100 / PTB330 / HMP  │     │ • 12-D Synoptic Vector  │     │ • 12D Isolation Forest  │     │ • SHAP Attribution (%)  │     │ • Plain-Text Email Alert│
+│ • INSAT-3DR (402.75MHz) │     │ • WMO-No. 8 Range Check │     │ • Microclimate Baseline │     │ • Non-Destructive Corr  │     │ • Live GIS Dashboard    │
+│ • FastAPI (<15ms stream)│     │ • Step ΔT ≤ 5°C/10min   │     │ • Sub-15ms Scoring      │     │ • OpenAI via Groq API   │     │ • HITL Operator Review  │
+└─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘
+```
 
-### **Right Column: Technology Stack**
-* **Core Machine Learning:** Python 3.10/3.12, Scikit-Learn (Isolation Forest), SHAP (TreeExplainer), NumPy, Pandas
-* **Agentic Framework:** LangGraph, LangChain, Groq API (Llama-3.3-70B / GPT-OSS 120B)
-* **Backend Gateway:** FastAPI, Uvicorn, Python `smtplib` / `email.mime`
-* **Frontend Dashboard:** React 19, Vite, Tailwind CSS, Leaflet.js (GIS Radar), Recharts, Lucide Icons
-* **Cloud & Serverless:** Netlify Edge Functions (`nodemailer`), GitHub Actions CI/CD
+---
+
+### **[ BOTTOM SECTION: Technical Stack & Framework Matrix ]**
+
+| Architectural Layer | Technologies Used | Key Role & Functionality |
+| :--- | :--- | :--- |
+| **Telemetry Ingestion & Gateway** | **FastAPI, Uvicorn, Python 3.10** | High-throughput async ingestion buffer (<15ms latency per AWS station) |
+| **Physics & Feature Engineering** | **NumPy, Pandas, WMO-No. 8 Standard** | 12-D vector extraction, thermodynamic step-change & flatline gradient checks |
+| **Machine Learning Core** | **Scikit-Learn (Isolation Forest), SHAP** | Unsupervised multivariate outlier detection & mathematical game-theoretic attribution |
+| **Agentic Diagnostics & GenAI** | **LangGraph, OpenAI Model (via Groq API)** | 6-Node state machine for root-cause synthesis & prescriptive field maintenance instructions |
+| **User Interface & GIS** | **React 19, Vite, Tailwind CSS, Leaflet.js** | Live Indian AWS surveillance grid, 60-min sliding series & Human-in-the-Loop drawer |
+| **Alerting & Cloud Deployment** | **Netlify Edge Functions, Gmail SMTP** | Automated plain-text email dispatches to field engineers with 180s anti-spam cooldown |
 
 ---
 
