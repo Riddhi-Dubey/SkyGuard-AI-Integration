@@ -15,6 +15,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Dict, Any, Optional
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # In-memory cooldown tracking: { station_id: timestamp_of_last_sent_alert }
 _STATION_COOLDOWNS: Dict[str, datetime] = {}
 _COOLDOWN_LOCK = threading.Lock()
