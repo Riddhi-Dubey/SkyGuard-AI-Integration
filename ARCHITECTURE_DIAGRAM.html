@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkyGuard AI — End-to-End System Architecture</title>
-  <!-- Mermaid JS -->
+  <title>SkyGuard AI — Slide-Optimized Readable Architecture</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -17,103 +15,90 @@
     .mermaid {
       display: flex;
       justify-content: center;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
     }
     .mermaid svg {
-      max-width: 100%;
-      height: auto;
-      border-radius: 12px;
-      background-color: #ffffff;
-      padding: 24px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      max-width: 100% !important;
+      height: auto !important;
     }
   </style>
 </head>
 <body class="min-h-screen p-6 flex flex-col items-center justify-center">
 
-  <div class="max-w-6xl w-full">
+  <div class="max-w-5xl w-full">
     <!-- Header -->
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-slate-900/80 border border-slate-800 p-6 rounded-2xl backdrop-blur-md">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-slate-900/90 border border-slate-800 p-6 rounded-2xl backdrop-blur-md">
       <div>
         <div class="flex items-center gap-2 mb-1">
-          <span class="px-2.5 py-0.5 text-xs font-bold font-mono bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-full">SIH PS 26073</span>
-          <span class="px-2.5 py-0.5 text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">IMD / MoES</span>
+          <span class="px-2.5 py-0.5 text-xs font-bold font-mono bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-full">16:9 PPT OPTIMIZED</span>
+          <span class="px-2.5 py-0.5 text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">HIGH LEGIBILITY</span>
         </div>
-        <h1 class="text-2xl font-black tracking-tight text-white">SkyGuard AI — End-to-End System Architecture</h1>
-        <p class="text-sm text-slate-400">Horizontal High-Resolution Architecture for PowerPoint & Documentation</p>
+        <h1 class="text-2xl font-black tracking-tight text-white">SkyGuard AI — Slide-Readable Architecture Diagram</h1>
+        <p class="text-sm text-slate-400">2-Row Balanced Grid Architecture (Formatted for Large Text & High Visibility in PowerPoint)</p>
       </div>
 
       <div class="flex items-center gap-3">
-        <button id="btn-png" onclick="downloadPNG()" class="px-4 py-2 text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white rounded-lg shadow-md transition-all flex items-center gap-2">
-          📥 Download High-Res PNG
+        <button onclick="downloadPNG()" class="px-4 py-2 text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white rounded-lg shadow-md transition-all flex items-center gap-2">
+          📥 Download High-Res PNG (2x)
         </button>
-        <button id="btn-svg" onclick="downloadSVG()" class="px-4 py-2 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg transition-all flex items-center gap-2">
+        <button onclick="downloadSVG()" class="px-4 py-2 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg transition-all flex items-center gap-2">
           🖼️ Download Vector SVG
         </button>
       </div>
     </div>
 
-    <!-- Diagram Container -->
-    <div id="diagram-wrapper" class="bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 mb-6 overflow-x-auto">
+    <!-- Diagram Box -->
+    <div id="diagram-container" class="bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 mb-6 overflow-x-auto">
       <div class="mermaid">
-flowchart LR
-    subgraph S1["1. Telemetry Ingest"]
-        direction TB
-        A1["📡 AWS Synoptic Nodes\n(Pt100, PTB330, HMP155)"]
-        A2["🛰️ INSAT-3DR Satellite\n(402.75 MHz DCP Burst / 4G)"]
-        A3["⚡ FastAPI Gateway\n(<15ms Async Ingestion)"]
-        A1 --> A2 --> A3
+flowchart TD
+    %% ROW 1: INGESTION & DUAL-TIER QC
+    subgraph R1["🔹 STAGE 1: TELEMETRY INGESTION & DUAL-TIER QUALITY CONTROL"]
+        direction LR
+        A["📡 1. AWS Telemetry Ingest<br/>• Pt100 RTD, PTB330, HMP155<br/>• INSAT-3DR 402.75MHz / 4G<br/>• FastAPI Buffer (&lt;15ms)"]
+        --> B["⚙️ 2. WMO-No. 8 Physics Gate<br/>• Step Limit: |ΔT/Δt| ≤ 5°C/10min<br/>• Flatline Check: σ²_1hr > 0<br/>• 12-D Feature Vector"]
+        --> C["🤖 3. 12D Isolation Forest ML<br/>• Multivariate Microclimate Baseline<br/>• Catches Subtle Drift<br/>• Anomaly Score (s ≤ 0.0)"]
     end
 
-    subgraph S2["2. Physics & Features"]
-        direction TB
-        B1["🧪 12-D Synoptic Vector\n(Gradients Δt, Volatility σ, Dew Pt)"]
-        B2{"⚙️ WMO-No. 8 Physics Gate\n(|ΔT/Δt| ≤ 5°C/10min\nFlatline σ > 0)"}
-        B1 --> B2
+    %% INTER-ROW CONNECTOR
+    C -->|🚨 Anomaly Flagged| R2
+    C -->|✅ Nominal Observation| CLEAN["🗄️ Clean Telemetry Stream (NWP Models)"]
+
+    %% ROW 2: AGENTIC DIAGNOSTICS & FIELD REMEDIATION
+    subgraph R2["🔹 STAGE 2: AGENTIC DIAGNOSTICS & FIELD REMEDIATION"]
+        direction LR
+        D["🧠 4. LangGraph 6-Node Agent<br/>• Confidence Calibration Engine<br/>• SHAP Feature Attribution (%)<br/>• Non-Destructive Baseline Estimate"]
+        --> E["⚡ 5. OpenAI via Groq API<br/>• Root-Cause Synthesis (RTD/Wiring)<br/>• Prescriptive Repair Action<br/>• Maintenance Risk Score"]
+        --> F["📢 6. Actionable Outputs<br/>• Plain-Text Email to Field Crew<br/>• Live GIS Dashboard (HITL Accept)<br/>• Raw Telemetry Preserved"]
     end
 
-    subgraph S3["3. Isolation Forest ML"]
-        direction TB
-        C1["🤖 12D Isolation Forest\n(Multivariate Microclimate)"]
-        C2{"Outlier Flagged?\n(Score ≤ 0.0)"}
-        C1 --> C2
-    end
+    %% STYLING
+    classDef card1 fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,font-size:13px,color:#0369a1;
+    classDef card2 fill:#fef3c7,stroke:#d97706,stroke-width:2px,font-size:13px,color:#92400e;
+    classDef card3 fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,font-size:13px,color:#166534;
+    classDef card4 fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px,font-size:13px,color:#5b21b6;
+    classDef card5 fill:#ede9fe,stroke:#6d28d9,stroke-width:2px,font-size:13px,color:#4c1d95;
+    classDef card6 fill:#ecfdf5,stroke:#059669,stroke-width:2px,font-size:13px,color:#065f46;
+    classDef cleanCard fill:#f8fafc,stroke:#64748b,stroke-width:1.5px,font-size:12px,color:#334155;
 
-    subgraph S4["4. LangGraph + OpenAI"]
-        direction TB
-        D1["📊 SHAP Attribution (%)"]
-        D2["🛡️ Non-Destructive Baseline\n(Preserves Raw Telemetry)"]
-        D3["🧠 OpenAI Model (via Groq)\n(Root-Cause & Field Action)"]
-        D1 --> D2 --> D3
-    end
+    class A card1;
+    class B card2;
+    class C card3;
+    class D card4;
+    class E card5;
+    class F card6;
+    class CLEAN cleanCard;
 
-    subgraph S5["5. Actionable Outputs"]
-        direction TB
-        E1["📧 Plain-Text Email Alert\n(Dispatched to Field Crew)"]
-        E2["🖥️ Live GIS Dashboard\n(HITL Operator Review)"]
-        E3["🗄️ Clean Telemetry Feed\n(NWP Weather Models)"]
-        E1 --- E2 --- E3
-    end
-
-    A3 --> B1
-    B2 -- "Physics Breach" --> D1
-    B2 -- "Plausible" --> C1
-    C2 -- "Anomalous" --> D1
-    C2 -- "Nominal" --> E3
-    D3 --> E1
-    D3 --> E2
-
-    style S1 fill:#f0f9ff,stroke:#0284c7,stroke-width:2px;
-    style S2 fill:#fef3c7,stroke:#d97706,stroke-width:2px;
-    style S3 fill:#f0fdf4,stroke:#16a34a,stroke-width:2px;
-    style S4 fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px;
-    style S5 fill:#ecfdf5,stroke:#059669,stroke-width:2px;
+    style R1 fill:#ffffff,stroke:#cbd5e1,stroke-width:2px;
+    style R2 fill:#ffffff,stroke:#cbd5e1,stroke-width:2px;
       </div>
     </div>
 
-    <!-- Instructions / Footer -->
+    <!-- Instructions -->
     <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl text-xs text-slate-400 flex items-center justify-between">
-      <span>💡 <strong>PowerPoint Tip:</strong> Click <em>"Download High-Res PNG"</em> to save this image directly into your presentation folder.</span>
-      <a href="https://mermaid.live" target="_blank" class="text-sky-400 hover:underline">Open in Mermaid Live Editor ↗</a>
+      <span>💡 <strong>PPT Benefit:</strong> This 2-Row grid has large text and balanced aspect ratio, ensuring zero squinting for judges.</span>
+      <a href="https://mermaid.ink/img/eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG4gICAgJSUgUk9XIDE6IElOR0VTVElPTiAmIERVQUwtVElFUiBRQ1xuICAgIHN1YmdyYXBoIFIxW1wi8J+UpSBSTAkiMS4gVEVMRU1FVFJZIFRJR0VTVElPTiAmIERVQUwtVElFUiBRVUFMSVRZIENPTlRST0xcIl1cbiAgICAgICAgZGlyZWN0aW9uIExSXG4gICAgICAgIEFbXCLwn5OpIDEuIEFXUyBUZWxlbWV0cnkgSW5nZXN0PGJyLz7igKogUHQxMDAgUlRELCBQVEIzMzAsIEhNUDE1NTxici8+4oCiIElOU0FULTNEUiA0MDIuNzVNSHogLyA0Rzxici8+4oCiIEZhc3RBUEkgQnVmZmVyICg8MTVtcylcIl1cbiAgICAgICAgLS0+IEJbXCLimJnvuI8gMi4gV01PLU5vLiA4IFBoeXNpY3MgR2F0ZTxici8+4oCiIFN0ZXAgTGltaXQ6IHzOlFQtZHR8IOKJpCA1wrBDLzEwbWluPGJyLz7igKogRmxhdGxpbmUgQ2hlY2s6IM+DwrJfMWhyID4gMDxici8+4oCiIDEyLUQgRmVhdHVyZSBWZWN0b3JcIl1cbiAgICAgICAgLS0+IENbXCLwn6SFIDMuIDEyRCBJc29sYXRpb24gRm9yZXN0IE1MPGJyLz7igKogTXVsdGl2YXJpYXRlIE1pY3JvY2xpbWF0ZSBCYXNlbGluZTxici8+4oCiIENhdGNoZXMgU3VidGxlIERyaWZ0PGJyLz7igKogQW5vbWFseSBTY29yZSAocyDiiKQgMC4wKVwiXVxuICAgIGVuZFxuXG4gICAgJSUgSU5URVItUk9XIENPTk5FQ1RPUlxuICAgIEMgLS0+fNCfmoAgQW5vbWFseSBGbGFnZ2VkfCBSMlxuICAgIEMgLS0+fOKckyBOb21pbmFsIE9ic2VydmF0aW9ufCBDTEVBTltcIvCflYTvuI8gQ2xlYW4gVGVsZW1ldHJ5IFN0cmVhbSAoTldQIE1vZGVscylcIl1cblxuICAgICUlIFJPVyAyOiBBR0VOVElDIERJQUdOT1NUSUNTICYgRklFTEQgUkVNRURJQVRJT05cbiAgICBzdWJncmFwaCBSMltcIvCflKUgU1RBR0UgMjogQUdFTlRJQyBESUFHTk9TVElDUyAmIEZJRUxEIFJFTUVESUFUSU9OXCJdXG4gICAgICAgIGRpcmVjdGlvbiBMUlxuICAgICAgICBFW1wi8J+nqCA0LiBMYW5nR3JhcGggNi1Ob2RlIEFnZW50PGJyLz7igKogQ29uZmlkZW5jZSBDYWxpYnJhdGlvbiBFbmdpbmU8YnIvPuKAoiBTSEFQIEZlYXR1cmUgQXR0cmlidXRpb24gKCUpPGJyLz7igKogTm9uLURlc3RydWN0aXZlIEJhc2VsaW5lIEVzdGltYXRlXCJdXG4gICAgICAgIC0tPiBGW1wi4pqh77iPIDUuIE9wZW5BSSB2aWEgR3JvcSBBUEk8YnIvPuKAoiBSb290LUNhdXNlIFN5bnRoZXNpcyAoUlREL1dpcmluZyk8YnIvPuKAoiBQcmVzY3JpcHRpdmUgUmVwYWlyIEFjdGlvbjxici8+4oCiIE1haW50ZW5hbmNlIFJpc2sgU2NvcmVcIl1cbiAgICAgICAgLS0+IEdbXCLwn5OUIDYuIEFjdGlvbmFibGUgT3V0cHV0czxici8+4oCiIFBsYWluLVRleHQgRW1haWwgdG8gRmllbGQgQ3Jldzxici8+4oCiIExpdmUgR0lTIERhc2hib2FyZCAoSElUTCBBY2NlcHQpPGJyLz7igKogUmF3IFRlbGVtZXRyeSBQcmVzZXJ2ZWRcIl1cbiAgICBlbmRcblxuICAgICUlIFNUWUxJTkdcbiAgICBjbGFzc0RlZiBjYXJkMSBmaWxsOiNmMGY5ZmYsc3Ryb2tlOiMwMjg0Yzcsc3Ryb2tlLXdpZHRoOjJweCxmb250LXNpemU6MTNweCxjb2xvcjojMDM2OWExO1xuICAgIGNsYXNzRGVmIGNhcmQyIGZpbGw6I2ZlZjNjNyxzdHJva2U6I2Q5NzcwNixzdHJva2Utd2lkdGg6MnB4LGZvbnQtc2l6ZToxM3B4LGNvbG9yOiM5MjQwMGU7XG4gICAgY2xhc3NEZWYgY2FyZDMgZmlsbDojZjBmZGY0LHN0cm9rZTojMTZhMzRhLHN0cm9rZS13aWR0aDoycHgsZm9udC1zaXplOjEzcHgsY29sb3I6IzE2NjUzNDtcbiAgICBjbGFzc0RlZiBjYXJkNCBmaWxsOiNmM2U4ZmYsc3Ryb2tlOiM3YzNhZWQsc3Ryb2tlLXdpZHRoOjJweCxmb250LXNpemU6MTNweCxjb2xvcjojNWIyMWI2O1xuICAgIGNsYXNzRGVmIGNhcmQ1IGZpbGw6I2VkZTlmZSxzdHJva2U6IzZkMjhkOSxzdHJva2Utd2lkdGg6MnB4LGZvbnQtc2l6ZToxM3B4LGNvbG9yOiM0YzFkOTU7XG4gICAgY2xhc3NEZWYgY2FyZDYgZmlsbDojZWNmZGY1LHN0cm9rZTojMDU5NjY5LHN0cm9rZS13aWR0aDoycHgsZm9udC1zaXplOjEzcHgsY29sb3I6IzA2NWY0NjtcbiAgICBjbGFzc0RlZiBjbGVhbkNhcmQgZmlsbDojZjhmYWZjLHN0cm9rZTojNjQ3NDhiLHN0cm9rZS13aWR0aDoxLjVweCxmb250LXNpemU6MTJweCxjb2xvcjojMzM0MTU1O1xuXG4gICAgY2xhc3MgQSBjYXJkMTtcbiAgICBjbGFzc0IgY2FyZDI7XG4gICAgY2xhc3MgQyBjYXJkMztcbiAgICBjbGFzc0QgY2FyZDQ7XG4gICAgY2xhc3MgRSBjYXJkNTtcbiAgICBjbGFzc0YgY2FyZDY7XG4gICAgY2xhc3MgQ0xFQU4gY2xlYW5DYXJkO1xuXG4gICAgc3R5bGUgUjEgZmlsbDojZmZmZmZmLHN0cm9rZTojY2JkNWUxLHN0cm9rZS13aWR0aDoycHg7XG4gICAgc3R5bGUgUjIgZmlsbDojZmZmZmZmLHN0cm9rZTojY2JkNWUxLHN0cm9rZS13aWR0aDoycHg7\"}?type=png" target="_blank" class="text-sky-400 hover:underline">Direct PNG Link ↗</a>
     </div>
   </div>
 
@@ -137,7 +122,7 @@ flowchart LR
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'SkyGuard_AI_Architecture.svg';
+      a.download = 'SkyGuard_AI_Architecture_Slide_Readable.svg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -151,8 +136,8 @@ flowchart LR
       try {
         const svgClone = svg.cloneNode(true);
         const bbox = svg.getBoundingClientRect();
-        const width = Math.max(900, bbox.width || 1100);
-        const height = Math.max(350, bbox.height || 450);
+        const width = Math.max(950, bbox.width || 1100);
+        const height = Math.max(550, bbox.height || 650);
         
         svgClone.setAttribute('width', width);
         svgClone.setAttribute('height', height);
@@ -164,7 +149,7 @@ flowchart LR
         
         const img = new Image();
         img.onload = function () {
-          const scale = 2; // 2x sharp resolution for PowerPoint
+          const scale = 2; // 2x sharp resolution
           const canvas = document.createElement('canvas');
           canvas.width = width * scale;
           canvas.height = height * scale;
@@ -177,14 +162,13 @@ flowchart LR
           const pngUrl = canvas.toDataURL('image/png');
           const a = document.createElement('a');
           a.href = pngUrl;
-          a.download = 'SkyGuard_AI_Architecture.png';
+          a.download = 'SkyGuard_AI_Architecture_Slide_Readable.png';
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
         };
         
         img.onerror = function() {
-          // Fallback to direct SVG
           downloadSVG();
         };
         

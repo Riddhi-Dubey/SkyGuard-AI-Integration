@@ -1,68 +1,39 @@
 const fs = require('fs');
 const https = require('https');
 
-const mermaidCode = `flowchart LR
-    subgraph S1["1. Telemetry Ingest"]
-        direction TB
-        A1["AWS Synoptic Nodes\\n(Pt100, PTB330, HMP155)"]
-        A2["INSAT-3DR Satellite\\n(402.75 MHz DCP Burst / 4G)"]
-        A3["FastAPI Gateway\\n(<15ms Async Ingestion)"]
-        A1 --> A2 --> A3
+const mermaidCode = `flowchart TD
+    subgraph R1["STAGE 1: TELEMETRY INGESTION AND DUAL-TIER QUALITY CONTROL"]
+        direction LR
+        A["1. AWS Telemetry Ingest\\n(Pt100 RTD, PTB330, HMP155)\\nINSAT-3DR 402.75MHz / 4G\\nFastAPI Buffer (<15ms)"]
+        --> B["2. WMO-No. 8 Physics Gate\\nStep Limit: |dt| <= 5C/10min\\nFlatline Check: var > 0\\n12-D Feature Vector"]
+        --> C["3. 12D Isolation Forest ML\\nMultivariate Microclimate Baseline\\nCatches Subtle Drift\\nAnomaly Score (s <= 0.0)"]
     end
 
-    subgraph S2["2. Physics and Features"]
-        direction TB
-        B1["12-D Synoptic Vector\\n(Gradients dt, Volatility, Dew Pt)"]
-        B2{"WMO-No. 8 Physics Gate\\n(Rate of Change Limit\\nFlatline Check)"}
-        B1 --> B2
+    C -->|Anomaly Flagged| R2
+    C -->|Nominal Observation| CLEAN["Clean Telemetry Stream (NWP Models)"]
+
+    subgraph R2["STAGE 2: AGENTIC DIAGNOSTICS AND FIELD REMEDIATION"]
+        direction LR
+        D["4. LangGraph 6-Node Agent\\nConfidence Calibration Engine\\nSHAP Feature Attribution (%)\\nNon-Destructive Baseline Estimate"]
+        --> E["5. OpenAI via Groq API\\nRoot-Cause Synthesis (RTD/Wiring)\\nPrescriptive Repair Action\\nMaintenance Risk Score"]
+        --> F["6. Actionable Outputs\\nPlain-Text Email to Field Crew\\nLive GIS Dashboard (HITL Accept)\\nRaw Telemetry Preserved"]
     end
 
-    subgraph S3["3. Isolation Forest ML"]
-        direction TB
-        C1["12D Isolation Forest\\n(Multivariate Microclimate)"]
-        C2{"Outlier Flagged?\\n(Score <= 0.0)"}
-        C1 --> C2
-    end
-
-    subgraph S4["4. LangGraph + OpenAI"]
-        direction TB
-        D1["SHAP Attribution (%)"]
-        D2["Non-Destructive Baseline\\n(Preserves Raw Telemetry)"]
-        D3["OpenAI Model (via Groq)\\n(Root-Cause and Field Action)"]
-        D1 --> D2 --> D3
-    end
-
-    subgraph S5["5. Actionable Outputs"]
-        direction TB
-        E1["Plain-Text Email Alert\\n(Dispatched to Field Crew)"]
-        E2["Live GIS Dashboard\\n(HITL Operator Review)"]
-        E3["Clean Telemetry Feed\\n(NWP Weather Models)"]
-        E1 --- E2 --- E3
-    end
-
-    A3 --> B1
-    B2 -- "Physics Breach" --> D1
-    B2 -- "Plausible" --> C1
-    C2 -- "Anomalous" --> D1
-    C2 -- "Nominal" --> E3
-    D3 --> E1
-    D3 --> E2
-
-    style S1 fill:#f0f9ff,stroke:#0284c7,stroke-width:2px;
-    style S2 fill:#fef3c7,stroke:#d97706,stroke-width:2px;
-    style S3 fill:#f0fdf4,stroke:#16a34a,stroke-width:2px;
-    style S4 fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px;
-    style S5 fill:#ecfdf5,stroke:#059669,stroke-width:2px;`;
-
-// standard base64 encoding
+    style R1 fill:#f0f9ff,stroke:#0284c7,stroke-width:2px;
+    style R2 fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px;
+    style A fill:#ffffff,stroke:#0284c7,stroke-width:1.5px;
+    style B fill:#ffffff,stroke:#d97706,stroke-width:1.5px;
+    style C fill:#ffffff,stroke:#16a34a,stroke-width:1.5px;
+    style D fill:#ffffff,stroke:#7c3aed,stroke-width:1.5px;
+    style E fill:#ffffff,stroke:#6d28d9,stroke-width:1.5px;
+    style F fill:#ffffff,stroke:#059669,stroke-width:1.5px;
+    style CLEAN fill:#ecfdf5,stroke:#059669,stroke-width:1.5px;`;
 
 const jsonPayload = JSON.stringify({
   code: mermaidCode,
   mermaid: {
     theme: 'default',
-    flowchart: {
-      curve: 'basis'
-    }
+    flowchart: { curve: 'basis' }
   }
 });
 
@@ -70,7 +41,7 @@ const b64 = Buffer.from(jsonPayload).toString('base64');
 
 function download(url, dest) {
   return new Promise((resolve, reject) => {
-    console.log('Downloading:', dest, 'from', url);
+    console.log('Downloading:', dest);
     const file = fs.createWriteStream(dest);
     https.get(url, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -91,12 +62,9 @@ function download(url, dest) {
 }
 
 async function main() {
-  const pngUrl = 'https://mermaid.ink/img/' + b64 + '?type=png&bgColor=!white&scale=2';
   const svgUrl = 'https://mermaid.ink/svg/' + b64 + '?bgColor=!white';
-  
-  await download(pngUrl, 'SkyGuard_AI_Architecture.png');
-  await download(svgUrl, 'SkyGuard_AI_Architecture.svg');
-  console.log('ALL FILES GENERATED SUCCESSFULLY!');
+  await download(svgUrl, 'SkyGuard_AI_Architecture_Slide_Readable.svg');
+  console.log('Readable SVG saved successfully!');
 }
 
 main().catch(console.error);
